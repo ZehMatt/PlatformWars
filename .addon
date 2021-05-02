@@ -1,0 +1,23 @@
+{
+		"name": "PlatformWars",
+		"version": "1.0",
+		"sharedassets": "*.*",
+		
+		"depends": 
+		[
+			"base",
+			"citizen",
+		],
+
+		//
+		// Addons can contain multiple addons, describe them here
+		//
+		"gamemodes":
+		[
+				{
+						"name": "platformwars",
+						"title": "PlatformWars",
+						"description": " "
+				}
+		]
+}

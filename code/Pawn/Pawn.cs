@@ -125,14 +125,7 @@ namespace PlatformWars
             if (PhysicsBody == null)
                 return;
 
-            //Log.Info("Test");
-
-            // PhysicsBody.Wake();
-            //PhysicsBody.AngularVelocity = Vector3.Zero;
-            //PhysicsBody.AngularDamping = 1.0f;
-            //PhysicsBody.AngularDrag = 1.0f;
-            //MoveType = MoveType.Physics;
-
+            // Keep up-right
             var rot = PhysicsBody.Rot;
             if (rot.x != 0 || rot.z != 0)
             {

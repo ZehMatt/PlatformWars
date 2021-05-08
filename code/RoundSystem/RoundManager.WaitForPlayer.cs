@@ -1,14 +1,14 @@
 ﻿namespace PlatformWars
 {
-    partial class RoundManager
-    {
-        void HandleWaitForPlayer()
-        {
-            if (Player.All.Count < 2)
-                return;
+	partial class RoundManager
+	{
+		void HandleWaitForPlayer()
+		{
+			if ( Player.All.Count < 2 )
+				return;
 
-            // Begin round setup.
-            SetState(RoundState.Setup);
-        }
-    }
+			// Begin round setup.
+			SetState( RoundState.TerrainGen );
+		}
+	}
 }

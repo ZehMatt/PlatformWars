@@ -8,6 +8,9 @@ namespace PlatformWars
         [Net]
         EntityHandle<RoundManager> RoundManager { get; set; }
 
+        [Net]
+        EntityHandle<Terrain.Manager> TerrainManager { get; set; }
+
         public Game()
         {
             if (IsServer)
@@ -21,6 +24,11 @@ namespace PlatformWars
             return RoundManager;
         }
 
+        public Terrain.Manager GetTerrainManager()
+        {
+            return TerrainManager;
+        }
+
         public override Player CreatePlayer() => new PlatformWars.Player();
 
         public override void PostLevelLoaded()
@@ -28,6 +36,7 @@ namespace PlatformWars
             base.PostLevelLoaded();
 
             RoundManager = Create<RoundManager>();
+            TerrainManager = Create<Terrain.Manager>();
         }
 
 

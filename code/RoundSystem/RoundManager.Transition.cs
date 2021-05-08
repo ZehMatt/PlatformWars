@@ -2,57 +2,60 @@
 
 namespace PlatformWars
 {
-    partial class RoundManager
-    {
-        [ServerVar]
-        public static float platformwars_transition_time { get; set; } = 1.0f;
+	partial class RoundManager
+	{
+		[ServerVar]
+		public static float platformwars_transition_time { get; set; } = 1.0f;
 
-        [NetPredicted]
-        int CurrentCycle { get; set; } = 0;
+		[NetPredicted]
+		int CurrentCycle { get; set; } = 0;
 
-        public Player GetNextPlayer()
-        {
-            int playerIndex = CurrentCycle % ActivePlayers.Count;
-            return GetPlayer(playerIndex);
-        }
+		public Player GetNextPlayer()
+		{
+			int playerIndex = CurrentCycle % ActivePlayers.Count;
+			return GetPlayer( playerIndex );
+		}
 
-        public Pawn GetNextPawn(Player player)
-        {
-            int pawnIndex = CurrentCycle % player.Pawns.Count;
-            return player.GetPawn(pawnIndex);
-        }
+		public Pawn GetNextPawn( Player player )
+		{
+			if ( player.Pawns.Count == 0 )
+				return null;
 
-        Player GetPlayer(int index)
-        {
-            if (index >= ActivePlayers.Count)
-                return null;
+			int pawnIndex = CurrentCycle % player.Pawns.Count;
+			return player.GetPawn( pawnIndex );
+		}
 
-            var ent = ActivePlayers.Get(index);
-            if (!ent.Entity.IsValid())
-                return null;
+		Player GetPlayer( int index )
+		{
+			if ( index >= ActivePlayers.Count )
+				return null;
 
-            return ent.Entity as Player;
-        }
+			var ent = ActivePlayers.Get( index );
+			if ( !ent.Entity.IsValid() )
+				return null;
 
-        void HandleTransition()
-        {
-            var currentPly = GetActivePlayer();
-            if (currentPly != null)
-            {
-                currentPly.Camera = new Cameras.Spectate();
-            }
+			return ent.Entity as Player;
+		}
 
-            var ply = GetNextPlayer();
-            var pawn = GetNextPawn(ply);
+		void HandleTransition()
+		{
+			var currentPly = GetActivePlayer();
+			if ( currentPly != null )
+			{
+				currentPly.Camera = new Cameras.Spectate();
+			}
 
-            CurrentCycle++;
+			var ply = GetNextPlayer();
+			var pawn = GetNextPawn( ply );
 
-            SetActivePlayer(ply);
-            ActivePawn = pawn;
+			CurrentCycle++;
 
-            ply.ControllPawn(pawn);
+			SetActivePlayer( ply );
+			ActivePawn = pawn;
 
-            SetState(RoundState.PrePlayerTurn);
-        }
-    }
+			ply.ControllPawn( pawn );
+
+			SetState( RoundState.PrePlayerTurn );
+		}
+	}
 }

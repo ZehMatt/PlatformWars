@@ -4,268 +4,149 @@ using System.Collections.Generic;
 
 namespace PlatformWars
 {
-    class PlatformTile
-    {
-        public bool Occupied;
-        public bool SpawnPoint;
-    }
+	partial class RoundManager
+	{
+		void SetupTeams()
+		{
+			Host.AssertServer();
 
-    class PlatformTiles
-    {
-        int MaxX = 0;
-        int MaxY = 0;
-        int MaxZ = 0;
-        List<PlatformTile> Tiles = new();
+			ActivePlayers.Clear();
 
-        public PlatformTiles(int maxX, int maxY, int maxZ)
-        {
-            MaxX = maxX;
-            MaxY = maxY;
-            MaxZ = maxZ;
-            for (int z = 0; z < maxZ; z++)
-            {
-                for (int x = 0; x < maxX; x++)
-                {
-                    for (int y = 0; y < maxY; y++)
-                    {
-                        Tiles.Add(new PlatformTile()
-                        {
-                            Occupied = false
-                        });
-                    }
-                }
-            }
-        }
+			// Setup the Teams.
+			int playerIdx = 0;
+			foreach ( var p in Player.All )
+			{
+				var ply = p as Player;
+				ply.SetTeam( Team.Red + playerIdx );
 
-        public PlatformTile Get(int x, int y, int z)
-        {
-            return Tiles[x + y * MaxX + z * MaxX * MaxY];
-        }
+				playerIdx++;
+				ActivePlayers.Add( ply );
+			}
+		}
 
-        public void Occupy(int x, int y, int z, bool spawnPoint)
-        {
-            var tile = Get(x, y, z);
-            tile.Occupied = true;
-            tile.SpawnPoint = spawnPoint;
-        }
+		void SetupPawns()
+		{
+			for ( int i = 0; i < ActivePlayers.Count; i++ )
+			{
+				var ply = ActivePlayers.Get( i ).Entity as Player;
+				ply.SetupPawns( 4 );
+			}
+		}
 
-        public void Remove(int x, int y, int z)
-        {
-            var tile = Get(x, y, z);
-            tile.Occupied = false;
-        }
-    }
+		bool GetSpawnPos( Terrain.Manager mgr, float x, float y, out Vector3 res )
+		{
+			res = Vector3.Zero;
 
-    partial class RoundManager
-    {
-        List<Entity> PlatformProps = new();
-        List<Entity> SpawnProps = new();
+			int w = Terrain.Manager.Width;
+			int l = Terrain.Manager.Length;
+			int h = Terrain.Manager.MaxHeight;
 
-        void ResetMap()
-        {
-            Host.AssertServer();
+			Vector3 pos = new Vector3( -(w / 2), -(l / 2), 16 );
 
-            foreach (var ent in Game.All)
-            {
-                if (ent is PlatformWars.Player)
-                    continue;
+			for ( int x1 = -2; x1 < 2; x1++ )
+			{
+				for ( int y1 = -2; y1 < 2; y1++ )
+				{
+					var voxPos = pos + new Vector3( x1, y1, 16 );
+					var vox = mgr.Get( voxPos );
+					if ( vox.Type == Terrain.TerrainType.Solid )
+					{
+						res = voxPos * Terrain.Voxel.SizeX;
+						return true;
+					}
+				}
+			}
 
-                if (ent is not Sandbox.Prop)
-                    continue;
+			return false;
+		}
 
-                ent.Delete();
-            }
-        }
+		struct SpawnPos
+		{
+			public Vector3 pos;
+			public float averageDist;
 
-        void SetupTeams()
-        {
-            Host.AssertServer();
+			public int CompareDistance( SpawnPos y )
+			{
+				return (int)(averageDist - y.averageDist);
+			}
+		}
 
-            ActivePlayers.Clear();
+		void ReorganizePawns()
+		{
+			Host.AssertServer();
 
-            // Setup the Teams.
-            int playerIdx = 0;
-            foreach (var p in Player.All)
-            {
-                var ply = p as Player;
-                ply.SetTeam(Team.Red + playerIdx);
+			List<Pawn> pawns = new List<Pawn>();
+			foreach ( var p in Player.All )
+			{
+				var ply = p as Player;
+				pawns.AddRange( ply.GetPawns() );
+			}
 
-                playerIdx++;
-                ActivePlayers.Add(ply);
-            }
-        }
+			var mgr = Terrain.Manager.Get();
+			var totalDim = Terrain.Manager.Width * Terrain.Manager.Length;
+			var dividedDim = MathF.Sqrt( totalDim / pawns.Count );
 
-        void SetupPawns()
-        {
-            for (int i = 0; i < ActivePlayers.Count; i++)
-            {
-                var ply = ActivePlayers.Get(i).Entity as Player;
-                ply.SetupPawns(4);
-            }
-        }
+			var spawns = new List<SpawnPos>();
+			foreach ( var spawn in mgr.GetSpawns() )
+			{
+				spawns.Add( new SpawnPos() { pos = spawn, averageDist = 0.0f } ); ;
+			}
 
-        const int MaxTilesX = 64;
-        const int MaxTilesY = 64;
-        const int MaxTilesZ = 8;
+			for ( int i = 0; i < spawns.Count; ++i )
+			{
+				var spawn = spawns[i];
+				for ( int j = 0; j < spawns.Count; j++ )
+				{
+					if ( j == i )
+						continue;
 
-        const int TileSizeX = Entities.Platform.BlockSize;
-        const int TileSizeY = Entities.Platform.BlockSize;
-        const int TileSizeZ = Entities.Platform.BlockSize;
+					var dist = Vector3.DistanceBetween( spawn.pos, spawns[j].pos );
+					if ( dist < 16 )
+					{
+						spawns.RemoveAt( j );
+						if ( j < i )
+							i--;
+						j--;
+					}
+				}
+			}
 
-        const int PlatformsOffsetZ = 3000;
+			int spawnCount = pawns.Count;
+			foreach ( var pawn in pawns )
+			{
+				int spawnPick = Rand.Int( 0, spawns.Count - 1 );
 
-        void CreatePlatform(float tileX, float tileY, float z, bool canSpawn = true)
-        {
-            float offsetX = (MaxTilesX * TileSizeX) / 2;
-            float offsetY = (MaxTilesY * TileSizeY) / 2;
+				var spawn = spawns[spawnPick];
+				var pos = spawn.pos;
+				var spawnPos = new Vector3( pos.x * Terrain.Voxel.SizeX, pos.y * Terrain.Voxel.SizeY, 200 + (pos.z * Terrain.Voxel.SizeZ) );
 
-            var x = tileX * TileSizeX;
-            var y = tileY * TileSizeY;
+				pawn.Reset( spawnPos );
 
-            var crate = Create<PlatformWars.Entities.Platform>();
-            crate.WorldPos = new Vector3(x - offsetX, y - offsetY, PlatformsOffsetZ + (z * TileSizeZ));
-            crate.Health = 100;
-            crate.Spawn();
+				spawns.RemoveAt( spawnPick );
+			}
+		}
 
-            var phys = crate.PhysicsBody;
-            if (phys != null)
-            {
-                phys.MotionEnabled = false;
-            }
+		void SetupPlayers()
+		{
+			for ( int i = 0; i < ActivePlayers.Count; i++ )
+			{
+				var ply = ActivePlayers.Get( i ).Entity as Player;
+				ply.Respawn();
+			}
+		}
 
-            PlatformProps.Add(crate);
-            if (canSpawn)
-                SpawnProps.Add(crate);
-        }
+		void HandleSetup()
+		{
+			if ( IsServer )
+			{
+				SetupTeams();
+				SetupPlayers();
+				SetupPawns();
+				ReorganizePawns();
+			}
 
-        // Public for command.
-        public void GeneratePlatforms()
-        {
-            foreach (var ent in PlatformProps)
-                ent.Delete();
+			SetState( RoundState.Starting );
+		}
 
-            PlatformProps.Clear();
-            SpawnProps.Clear();
-
-            var tiles = new PlatformTiles(MaxTilesX, MaxTilesY, MaxTilesZ);
-
-            // Generate Tiles
-            {
-                float offset1 = Rand.Float(-16000.0f, 16000.0f);
-                float offset2 = Rand.Float(-16000.0f, 16000.0f);
-
-                float z = 0.1f;
-                for (int x = 0; x < MaxTilesX; x++)
-                {
-                    float x1 = (float)x / MaxTilesX;
-
-                    for (int y = 0; y < MaxTilesY; y++)
-                    {
-                        float y1 = (float)y / MaxTilesY;
-
-                        {
-                            float scale = 8.0f;
-                            float value = Noise.Perlin(offset1 + (x1 * scale), offset1 + (y1 * scale), z * scale);
-                            var height = Math.Clamp(value * MaxTilesZ, -1, MaxTilesZ);
-                            if (height > 0)
-                            {
-                                int ix = (int)x;
-                                int iy = (int)y;
-                                int iz = (int)MathF.Round(height);
-
-                                tiles.Occupy(ix, iy, iz, true);
-                                for (int z1 = 0; z1 < Math.Min(iz, 2); z1++)
-                                    tiles.Occupy(ix, iy, z1, false);
-                            }
-                        }
-
-
-                        {
-                            float scale = 13.0f;
-                            float value = Noise.Perlin(offset2 + (x1 * scale), offset2 + (y1 * scale), z * scale);
-                            var height = Math.Clamp(value * MaxTilesZ, -1, MaxTilesZ);
-                            if (height > 0)
-                            {
-                                int ix = (int)x;
-                                int iy = (int)y;
-                                int iz = (int)MathF.Round(height);
-
-                                for (int z1 = 1; z1 < Math.Min(iz, 2); z1++)
-                                    tiles.Remove(ix, iy, z1);
-                            }
-                        }
-
-                    }
-                }
-
-            }
-
-            // Convert to platform objects.
-            for (int z = 0; z < MaxTilesZ; z++)
-            {
-                for (int x = 0; x < MaxTilesX; x++)
-                {
-                    for (int y = 0; y < MaxTilesY; y++)
-                    {
-                        var tile = tiles.Get(x, y, z);
-                        if (!tile.Occupied)
-                            continue;
-
-                        CreatePlatform(x, y, z, tile.SpawnPoint);
-                    }
-                }
-            }
-
-        }
-
-        void ReorganizePawns()
-        {
-            Host.AssertServer();
-
-            List<Pawn> pawns = new List<Pawn>();
-            foreach (var p in Player.All)
-            {
-                var ply = p as Player;
-                pawns.AddRange(ply.GetPawns());
-            }
-
-            float total = pawns.Count;
-            var platforms = SpawnProps.ToArray();
-            for (float i = 0; i < total; i++)
-            {
-                var pawn = pawns[(int)i];
-
-                var platform = Rand.FromArray(platforms);
-
-                // Reset pawn at the platform position.
-                pawn.Reset(platform.WorldPos + new Vector3(0, 0, TileSizeZ));
-            }
-        }
-
-        void SetupPlayers()
-        {
-            for (int i = 0; i < ActivePlayers.Count; i++)
-            {
-                var ply = ActivePlayers.Get(i).Entity as Player;
-                ply.Respawn();
-            }
-        }
-
-        void HandleSetup()
-        {
-            if (IsServer)
-            {
-                ResetMap();
-                SetupTeams();
-                GeneratePlatforms();
-
-                SetupPlayers();
-                SetupPawns();
-                ReorganizePawns();
-            }
-
-            SetState(RoundState.Starting);
-        }
-
-    }
+	}
 }

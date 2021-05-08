@@ -5,186 +5,189 @@ using System;
 
 namespace PlatformWars.UI.Huds
 {
-    class Timer : Panel
-    {
-        public Label CounterLabel;
+	class Timer : Panel
+	{
+		public Label CounterLabel;
 
-        public Timer()
-        {
-            CounterLabel = Add.Label("0");
-        }
-    }
+		public Timer()
+		{
+			CounterLabel = Add.Label( "0" );
+		}
+	}
 
-    class Info : Panel
-    {
-        public Label TextLabel;
+	class Info : Panel
+	{
+		public Label TextLabel;
 
-        bool DelayedActivate;
-        RealTimeSince TextActive;
+		bool DelayedActivate;
+		RealTimeSince TextActive;
 
-        public Info()
-        {
-            TextLabel = Add.Label();
-        }
+		public Info()
+		{
+			TextLabel = Add.Label();
+		}
 
-        public void SetText(string newText)
-        {
-            if (TextLabel.Text == newText)
-                return;
+		public void SetText( string newText )
+		{
+			if ( TextLabel.Text == newText )
+				return;
 
-            if (TextActive < 3.0)
-            {
-                TextLabel.SetClass("active", false);
-                DelayedActivate = true;
-            }
-            else
-            {
-                TextLabel.SetClass("active", true);
-            }
+			if ( TextActive < 3.0 )
+			{
+				TextLabel.SetClass( "active", false );
+				DelayedActivate = true;
+			}
+			else
+			{
+				TextLabel.SetClass( "active", true );
+			}
 
-            TextActive = 0;
-            TextLabel.Text = newText;
-        }
+			TextActive = 0;
+			TextLabel.Text = newText;
+		}
 
-        public override void Tick()
-        {
-            base.Tick();
+		public override void Tick()
+		{
+			base.Tick();
 
-            if (DelayedActivate && TextActive >= 0.2)
-            {
-                TextLabel.SetClass("active", true);
-                DelayedActivate = false;
-            }
+			if ( DelayedActivate && TextActive >= 0.2 )
+			{
+				TextLabel.SetClass( "active", true );
+				DelayedActivate = false;
+			}
 
-            if (TextActive >= 3.0f)
-                TextLabel.SetClass("active", false);
-        }
-    }
+			if ( TextActive >= 3.0f )
+				TextLabel.SetClass( "active", false );
+		}
+	}
 
-    public class RoundInfo : Panel
-    {
-        Info InfoPanel;
-        Timer TimerPanel;
+	public class RoundInfo : Panel
+	{
+		Info InfoPanel;
+		Timer TimerPanel;
 
-        public static bool Enabled2 = false;
+		public static bool Enabled2 = false;
 
-        public RoundInfo()
-        {
-            StyleSheet.Load("/ui/huds/RoundInfo.scss");
+		public RoundInfo()
+		{
+			StyleSheet.Load( "/ui/huds/RoundInfo.scss" );
 
-            InfoPanel = new();
-            InfoPanel.Parent = this;
+			InfoPanel = new();
+			InfoPanel.Parent = this;
 
-            TimerPanel = new();
-            TimerPanel.Parent = this;
-        }
+			TimerPanel = new();
+			TimerPanel.Parent = this;
+		}
 
-        public override void Tick()
-        {
-            base.Tick();
+		public override void Tick()
+		{
+			base.Tick();
 
-            var roundMgr = RoundManager.Get();
-            if (roundMgr == null)
-                return;
+			var roundMgr = RoundManager.Get();
+			if ( roundMgr == null )
+				return;
 
-            UpdateInfo(roundMgr);
-            UpdateTimer(roundMgr);
-        }
+			UpdateInfo( roundMgr );
+			UpdateTimer( roundMgr );
+		}
 
-        void UpdateInfoText(RoundManager roundMgr)
-        {
-            var state = roundMgr.GetState();
-            var activePly = roundMgr.GetActivePlayer();
-            var localPly = Player.Local;
+		void UpdateInfoText( RoundManager roundMgr )
+		{
+			var state = roundMgr.GetState();
+			var activePly = roundMgr.GetActivePlayer();
+			var localPly = Player.Local;
 
-            var text = "";
-            switch (state)
-            {
-                case RoundState.WaitForPlayer:
-                    text = "Waiting for players...";
-                    break;
-                case RoundState.Setup:
-                    text = "Initializing";
-                    break;
-                case RoundState.Starting:
-                    float stateTime = roundMgr.GetStateTime();
-                    float maxTime = roundMgr.GetStateTime(state);
-                    int secs = (int)MathF.Round(maxTime - stateTime);
-                    text = $"Starting Round in {secs}";
-                    break;
-                case RoundState.PrePlayerTurn:
-                    if (activePly == localPly)
-                    {
-                        text = "Your turn, get prepared.";
-                    }
-                    else
-                    {
-                        text = $"{activePly.Name} is thinking.";
-                    }
-                    break;
-                case RoundState.PlayerTurn:
-                    if (activePly == localPly)
-                    {
-                        text = "Go!";
-                    }
-                    else
-                    {
-                        text = $"{activePly.Name} is on the move";
-                    }
-                    break;
-                case RoundState.PostPlayerTurn:
-                    text = "Turn over";
-                    break;
-                case RoundState.Evaluate:
-                case RoundState.Transition:
-                case RoundState.End:
-                case RoundState.Restart:
-                case RoundState.Idle:
-                    return;
-            }
+			var text = "";
+			switch ( state )
+			{
+				case RoundState.WaitForPlayer:
+					text = "Waiting for players...";
+					break;
+				case RoundState.TerrainGen:
+					text = "Generating level...";
+					break;
+				case RoundState.Setup:
+					text = "Initializing";
+					break;
+				case RoundState.Starting:
+					float stateTime = roundMgr.GetStateTime();
+					float maxTime = roundMgr.GetStateTime( state );
+					int secs = (int)MathF.Round( maxTime - stateTime );
+					text = $"Starting Round in {secs}";
+					break;
+				case RoundState.PrePlayerTurn:
+					if ( activePly == localPly )
+					{
+						text = "Your turn, get prepared.";
+					}
+					else
+					{
+						text = $"{activePly.Name} is thinking.";
+					}
+					break;
+				case RoundState.PlayerTurn:
+					if ( activePly == localPly )
+					{
+						text = "Go!";
+					}
+					else
+					{
+						text = $"{activePly.Name} is on the move";
+					}
+					break;
+				case RoundState.PostPlayerTurn:
+					text = "Turn over";
+					break;
+				case RoundState.Evaluate:
+				case RoundState.Transition:
+				case RoundState.End:
+				case RoundState.Restart:
+				case RoundState.Idle:
+					return;
+			}
 
-            if (text == "")
-                return;
+			if ( text == "" )
+				return;
 
-            InfoPanel.SetText(text);
-        }
+			InfoPanel.SetText( text );
+		}
 
-        void UpdateInfo(RoundManager roundMgr)
-        {
-            float stateTime = roundMgr.GetStateTime();
+		void UpdateInfo( RoundManager roundMgr )
+		{
+			float stateTime = roundMgr.GetStateTime();
 
-            var curState = roundMgr.GetState();
-            UpdateInfoText(roundMgr);
-        }
+			var curState = roundMgr.GetState();
+			UpdateInfoText( roundMgr );
+		}
 
-        void UpdateTimer(RoundManager roundMgr)
-        {
-            float stateTime = roundMgr.GetStateTime();
+		void UpdateTimer( RoundManager roundMgr )
+		{
+			float stateTime = roundMgr.GetStateTime();
 
-            bool showTimer = false;
-            var state = roundMgr.GetState();
-            switch (state)
-            {
-                case RoundState.PrePlayerTurn:
-                case RoundState.PlayerTurn:
-                    showTimer = true;
-                    break;
-            }
+			bool showTimer = false;
+			var state = roundMgr.GetState();
+			switch ( state )
+			{
+				case RoundState.PrePlayerTurn:
+				case RoundState.PlayerTurn:
+					showTimer = true;
+					break;
+			}
 
-            TimerPanel.SetClass("active", showTimer);
+			TimerPanel.SetClass( "active", showTimer );
 
-            if (showTimer)
-            {
-                float maxTime = roundMgr.GetStateTime(state);
-                if (maxTime >= 0.0f)
-                {
-                    // Countdown instead of counter.
-                    stateTime = maxTime - stateTime;
-                }
+			if ( showTimer )
+			{
+				float maxTime = roundMgr.GetStateTime( state );
+				if ( maxTime >= 0.0f )
+				{
+					// Countdown instead of counter.
+					stateTime = maxTime - stateTime;
+				}
 
-                TimerPanel.CounterLabel.Text = string.Format("{0:00.00}", stateTime);
-            }
+				TimerPanel.CounterLabel.Text = string.Format( "{0:00.00}", stateTime );
+			}
 
-        }
-    }
+		}
+	}
 }

@@ -111,7 +111,7 @@ namespace PlatformWars
 					break;
 			}
 
-			if ( StatePaused )
+			if ( !StatePaused )
 				StateTime += Time.Delta;
 		}
 

@@ -33,33 +33,6 @@ namespace PlatformWars
 			}
 		}
 
-		bool GetSpawnPos( Terrain.Manager mgr, float x, float y, out Vector3 res )
-		{
-			res = Vector3.Zero;
-
-			int w = Terrain.Manager.Width;
-			int l = Terrain.Manager.Length;
-			int h = Terrain.Manager.MaxHeight;
-
-			Vector3 pos = new Vector3( -(w / 2), -(l / 2), 16 );
-
-			for ( int x1 = -2; x1 < 2; x1++ )
-			{
-				for ( int y1 = -2; y1 < 2; y1++ )
-				{
-					var voxPos = pos + new Vector3( x1, y1, 16 );
-					var vox = mgr.Get( voxPos );
-					if ( vox.Type == Terrain.TerrainType.Solid )
-					{
-						res = voxPos * Terrain.Voxel.SizeX;
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
 		struct SpawnPos
 		{
 			public Vector3 pos;

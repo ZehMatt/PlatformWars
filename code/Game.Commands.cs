@@ -10,9 +10,13 @@ namespace PlatformWars
 			var target = ConsoleSystem.Caller;
 			if ( target == null )
 				return;
-			Log.Info( $"Pos: {target.WorldPos}" );
-			Log.Info( $"Ang: {target.WorldAng}" );
-			Log.Info( $"Vel: {target.Velocity}" );
+			var pawn = target.Pawn;
+			if ( pawn == null || pawn.IsValid() )
+				return;
+
+			Log.Info( $"Pos: {pawn.Position}" );
+			Log.Info( $"Ang: {pawn.Rotation}" );
+			Log.Info( $"Vel: {pawn.Velocity}" );
 		}
 
 		[ServerCmd( "terrain_gen", Help = "Generate Terrain" )]

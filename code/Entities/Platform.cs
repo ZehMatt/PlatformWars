@@ -18,19 +18,14 @@ namespace PlatformWars.Entities
 			SetModel( "models/citizen_props/crate01.vmdl" );
 			//Health = MaxHealth;
 			EnableShadowCasting = false;
-			EnableShadowReceive = false;
-
-			//UpdateColor();
-
-			//SetupPhysicsFromOBB( PhysicsMotionType.Static, Vector3.Zero, Terrain.Voxel.Size );
-			//MoveType = MoveType.Physics;
+			EnableShadowReceive = true;
 
 			if ( PhysicsBody != null )
 			{
 				PhysicsBody.MotionEnabled = false;
 			}
 
-			//RemoveCollisionLayer( CollisionLayer.Trigger );
+			RemoveCollisionLayer( CollisionLayer.Trigger );
 		}
 
 		protected override void OnDestroy()

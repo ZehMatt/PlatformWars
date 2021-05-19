@@ -6,6 +6,8 @@ namespace PlatformWars
 {
 	partial class RoundManager
 	{
+		const int PawnCount = 10;
+
 		void SetupTeams()
 		{
 			Host.AssertServer();
@@ -14,7 +16,9 @@ namespace PlatformWars
 
 			// Setup the Teams.
 			int playerIdx = 0;
-			foreach ( var p in Player.All )
+			var game = Game.Current as PlatformWars.Game;
+			var players = game.GetPlayers();
+			foreach ( var p in players )
 			{
 				var ply = p as Player;
 				ply.SetTeam( Team.Red + playerIdx );
@@ -29,7 +33,7 @@ namespace PlatformWars
 			for ( int i = 0; i < ActivePlayers.Count; i++ )
 			{
 				var ply = ActivePlayers.Get( i ).Entity as Player;
-				ply.SetupPawns( 4 );
+				ply.SetupPawns( PawnCount );
 			}
 		}
 
@@ -48,8 +52,11 @@ namespace PlatformWars
 		{
 			Host.AssertServer();
 
+			var game = Game.Current as PlatformWars.Game;
+			var players = game.GetPlayers();
+
 			List<Pawn> pawns = new List<Pawn>();
-			foreach ( var p in Player.All )
+			foreach ( var p in players )
 			{
 				var ply = p as Player;
 				pawns.AddRange( ply.GetPawns() );
@@ -76,6 +83,10 @@ namespace PlatformWars
 					var dist = Vector3.DistanceBetween( spawn.pos, spawns[j].pos );
 					if ( dist < 16 )
 					{
+						// We have to make sure we got enough spawns.
+						if ( spawns.Count - 1 <= pawns.Count )
+							break;
+
 						spawns.RemoveAt( j );
 						if ( j < i )
 							i--;
@@ -84,10 +95,12 @@ namespace PlatformWars
 				}
 			}
 
+			var prng = new System.Random( WorldSeed );
+
 			int spawnCount = pawns.Count;
 			foreach ( var pawn in pawns )
 			{
-				int spawnPick = Rand.Int( 0, spawns.Count - 1 );
+				int spawnPick = prng.Next( 0, spawns.Count - 1 );
 
 				var spawn = spawns[spawnPick];
 				var pos = spawn.pos;
@@ -103,8 +116,6 @@ namespace PlatformWars
 		{
 			for ( int i = 0; i < ActivePlayers.Count; i++ )
 			{
-				var ply = ActivePlayers.Get( i ).Entity as Player;
-				ply.Respawn();
 			}
 		}
 

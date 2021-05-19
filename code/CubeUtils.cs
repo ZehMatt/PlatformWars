@@ -12,7 +12,7 @@ class CubeUtils
 
 		public void AddVertex( Vector3 pos, Vector2 uv, Vector3 normal, Vector3 tangent )
 		{
-			var vert = new Vertex( pos, normal, tangent, new Vector4( uv.x, uv.y, 0.0, 0.0 ) );
+			var vert = new Vertex( pos, normal, tangent, new Vector4( uv.x, uv.y, 0.0f, 0.0f ) );
 			verts.Add( vert );
 		}
 

@@ -28,7 +28,7 @@ namespace PlatformWars
 				int h = Terrain.Manager.MaxHeight;
 
 				Vector3 pos = new Vector3( -(w / 2), -(l / 2), 16 );
-				TerrainGen.Generate( pos, w, l, h );
+				TerrainGen.Generate( pos, w, l, h, WorldSeed );
 			}
 
 			if ( TerrainGen.IsGenerating )

@@ -22,7 +22,7 @@ namespace PlatformWars.Terrain
 
 		public static Manager Get()
 		{
-			var game = GameBase.Current as PlatformWars.Game;
+			var game = Game.Current as PlatformWars.Game;
 			return game.GetTerrainManager();
 		}
 
@@ -77,7 +77,7 @@ namespace PlatformWars.Terrain
 			}
 
 			chunk = Create<Chunk>();
-			chunk.WorldPos = new Vector3( chunkPos.x * ChunkData.SizeX, chunkPos.y * ChunkData.SizeY,
+			chunk.Position = new Vector3( chunkPos.x * ChunkData.SizeX, chunkPos.y * ChunkData.SizeY,
 				chunkPos.z * ChunkData.SizeZ );
 
 			Chunks.Add( chunkPos, chunk );

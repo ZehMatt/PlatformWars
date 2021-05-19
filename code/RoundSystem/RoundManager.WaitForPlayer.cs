@@ -4,8 +4,13 @@
 	{
 		void HandleWaitForPlayer()
 		{
-			if ( Player.All.Count < 2 )
+			var game = Game.Current as PlatformWars.Game;
+			var players = game.GetPlayers();
+
+			if ( players.Count < 2 )
 				return;
+
+
 
 			// Begin round setup.
 			SetState( RoundState.TerrainGen );

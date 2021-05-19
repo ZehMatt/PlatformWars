@@ -13,9 +13,32 @@ namespace PlatformWars
 		Magenta,
 	}
 
-	partial class Player : BasePlayer
+	class TemporaryClient : Sandbox.Client
+	{
+		public IReadOnlyList<Client> All { get => Sandbox.Client.All; }
+		public UserInput Input { get { return new UserInput(); } }
+		public ulong SteamId { get { return 0; } }
+		public string Name { get { return ""; } }
+		public int NetworkIdent { get => 0; }
+		public ICamera Camera { get => null; set { } }
+		public ICamera DevCamera { get => null; set { } }
+		public PvsConfig Pvs { get => null; }
+		public Entity Pawn { get; set; }
+
+		public T GetScore<T>( string key, T defaultValue = default ) { return defaultValue; }
+		public string GetUserString( string key, string defaultValue = null ) { return defaultValue; }
+		public bool HasPermission( string v ) { return false; }
+		public void SendCommandToClient( string command ) { }
+		public void SetScore( string key, object value ) { }
+	}
+
+	partial class Player : Entity
 	{
 		static readonly Color32[] TeamColors = { Color32.Transparent, Color32.Red, Color32.Green, Color32.Cyan, Color32.Yellow, Color32.Magenta };
+
+		Client _client;
+
+		public Client Client { get => _client; }
 
 		[Net]
 		public Network.NetList<EntityHandle<Pawn>> Pawns { get; set; } = new();
@@ -26,28 +49,48 @@ namespace PlatformWars
 		[Net]
 		Team CurrentTeam { get; set; }
 
-		public override void Spawn()
+		[Net]
+		int ClientId { get; set; }
+
+		public string Name { get => _client.Name; }
+
+		public ulong SteamId { get => _client.SteamId; }
+
+		Stack<Cameras.Mode> CameraStack = new();
+
+		public Player( Client cl )
 		{
-			Controller = new PlayerController();
-			Animator = new StandardPlayerAnimator();
-			Camera = new Cameras.Spectate();
-			Inventory = new BaseInventory( this );
+			Transmit = TransmitType.Always;
 
-			if ( IsServer )
+			Host.AssertServer();
+
+			_client = cl;
+			ClientId = cl.NetworkIdent;
+
+			Spectate();
+		}
+
+		public Player()
+		{
+			Log.Info( "Player on client" );
+
+			Host.AssertClient();
+			foreach ( var cl in Client.All )
 			{
-				CurrentTeam = Team.Spectator;
-				EnableDrawing = false;
-				CollisionGroup = CollisionGroup.Never;
-				EnableViewmodelRendering = false;
-
-				// Our player is not supposed to be an actual player.
-				RemoveCollisionLayer( CollisionLayer.Trigger );
+				if ( cl.NetworkIdent == ClientId )
+				{
+					_client = cl;
+				}
+			}
+			if ( _client == null )
+			{
+				Log.Error( "Client is unknown!" );
 			}
 		}
 
 		public Pawn GetControlledPawn()
 		{
-			return (ControlledPawn.IsValid ? ControlledPawn.Entity : null) as Pawn;
+			return _client.Pawn as Pawn;
 		}
 
 		void ResetPawns()
@@ -76,7 +119,7 @@ namespace PlatformWars
 
 			for ( int i = 0; i < count; i++ )
 			{
-				var pawn = Create<Pawn>();
+				var pawn = new Pawn();
 				pawn.AssignPlayer( this );
 				pawn.RenderColor = TeamColors[(int)CurrentTeam % TeamColors.Length];
 
@@ -112,14 +155,11 @@ namespace PlatformWars
 			return res;
 		}
 
-		public override Camera GetActiveCamera()
-		{
-			return base.GetActiveCamera();
-		}
-
 		public void Spectate()
 		{
-			Camera = new Cameras.Spectate();
+			Host.AssertServer();
+
+			SetCameraMode( Cameras.Mode.Spectate );
 		}
 
 		public Pawn GetPawn( int index )
@@ -136,45 +176,14 @@ namespace PlatformWars
 
 		public void RemoveControlled()
 		{
-			var pawn = GetControlledPawn();
-			if ( pawn == null )
-				return;
-
-			if ( IsAuthority )
-			{
-				pawn.SetParent( null );
-				pawn.CopyBonesFrom( this );
-			}
-
-			EnableDrawing = false;
-			EnableViewmodelRendering = false;
-			CollisionGroup = CollisionGroup.Never;
-
-			ControlledPawn = null;
+			Client.Pawn = null;
+			SetCameraMode( Cameras.Mode.Spectate );
 		}
 
 		public void ControllPawn( Pawn pawn )
 		{
-			RemoveControlled();
-
-			ControlledPawn = pawn;
-
-			if ( IsAuthority )
-			{
-				WorldPos = pawn.WorldPos;
-				WorldAng = pawn.WorldAng;
-
-				EnableDrawing = true;
-				Camera = new FirstPersonCamera();
-				CollisionGroup = CollisionGroup.Weapon;
-				EnableViewmodelRendering = true;
-
-				RenderColor = pawn.RenderColor;
-
-				pawn.SetParent( this, true );
-				pawn.EnableDrawing = true;
-				pawn.EnableAllCollisions = true;
-			}
+			Client.Pawn = pawn;
+			SetCameraMode( Cameras.Mode.FPS );
 		}
 
 		public void SetTeam( Team team )
@@ -183,73 +192,61 @@ namespace PlatformWars
 			CurrentTeam = team;
 		}
 
-		public override void Respawn()
+		public void PushCameraMode( Cameras.Mode newMode )
 		{
-			if ( CurrentTeam == Team.Spectator )
-				return;
+			var current = Camera as Cameras.Base;
+			Assert.NotNull( current );
 
-			SetModel( "models/citizen/citizen.vmdl" );
+			CameraStack.Push( current.Mode );
 
-			EnableAllCollisions = false;
-			EnableDrawing = false;
-			EnableHideInFirstPerson = true;
-			EnableViewmodelRendering = false;
-			EnableShadowInFirstPerson = true;
-			CollisionGroup = CollisionGroup.Weapon;
-			EnableSolidCollisions = false;
-
-			Inventory.Add( new Weapons.Pistol(), true );
-			GiveAmmo( Weapons.AmmoType.Pistol, 100 );
-
-			base.Respawn();
+			SetCameraMode( newMode );
 		}
 
-		public override void OnKilled()
+		public void PopCameraMode()
 		{
+			Assert.True( CameraStack.Count > 0 );
+
+			var oldMode = CameraStack.Pop();
+			SetCameraMode( oldMode );
 		}
 
-		protected override void Tick()
+		void SetCamera( Camera cam )
 		{
-			base.Tick();
+			Client.Camera = cam;
+		}
 
-			//
-			// Input requested a weapon switch
-			//
-			if ( Input.ActiveChild != null )
+		public void SetCameraMode( Cameras.Mode mode )
+		{
+			switch ( mode )
 			{
-				ActiveChild = Input.ActiveChild;
-			}
-
-			if ( LifeState != LifeState.Alive )
-				return;
-
-			TickPlayerUse();
-
-			if ( Input.Pressed( InputButton.View ) )
-			{
-				if ( Camera is ThirdPersonCamera )
-				{
-					Camera = new FirstPersonCamera();
-				}
-				else
-				{
-					Camera = new ThirdPersonCamera();
-				}
+				case Cameras.Mode.Spectate:
+					SetCamera( new Cameras.Spectate() );
+					break;
+				case Cameras.Mode.PawnDeath:
+					SetCamera( new Cameras.PawnDeathCam() );
+					break;
+				case Cameras.Mode.FPS:
+					SetCamera( new Cameras.FPS() );
+					break;
+				default:
+					Assert.True( false );
+					break;
 			}
 		}
 
-		public override void StartTouch( Entity other )
+		[Event( "server.tick" )]
+		void ServerTick()
 		{
-			base.StartTouch( other );
-		}
-
-		public override void PostCameraSetup( Camera camera )
-		{
-			base.PostCameraSetup( camera );
-		}
-
-		public override void TakeDamage( DamageInfo info )
-		{
+			var curPawn = GetControlledPawn();
+			foreach ( var pawn in GetPawns() )
+			{
+				if ( pawn != curPawn )
+				{
+					// Ugly work around to keep simulating forces with no input.
+					var tempCl = new TemporaryClient() { Pawn = pawn };
+					pawn.Simulate( tempCl );
+				}
+			}
 		}
 	}
 }

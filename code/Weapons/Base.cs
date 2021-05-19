@@ -2,277 +2,256 @@
 
 namespace PlatformWars.Weapons
 {
-    partial class Base : BaseWeapon
-    {
-        public virtual AmmoType AmmoType => AmmoType.Pistol;
-        public virtual int ClipSize => 16;
-        public virtual float ReloadTime => 3.0f;
-        public virtual int Bucket => 1;
-        public virtual int BucketWeight => 100;
+	partial class Base : BaseWeapon
+	{
+		public virtual AmmoType AmmoType => AmmoType.Pistol;
+		public virtual int ClipSize => 16;
+		public virtual float ReloadTime => 3.0f;
+		public virtual int Bucket => 1;
+		public virtual int BucketWeight => 100;
 
-        [NetPredicted]
-        public int AmmoClip { get; set; }
+		[NetPredicted]
+		public int AmmoClip { get; set; }
 
-        [NetPredicted]
-        public TimeSince TimeSinceReload { get; set; }
+		[NetPredicted]
+		public TimeSince TimeSinceReload { get; set; }
 
-        [NetPredicted]
-        public bool IsReloading { get; set; }
+		[NetPredicted]
+		public bool IsReloading { get; set; }
 
-        [NetPredicted]
-        public TimeSince TimeSinceDeployed { get; set; }
-
-
-        public PickupTrigger PickupTrigger { get; protected set; }
+		[NetPredicted]
+		public TimeSince TimeSinceDeployed { get; set; }
 
 
-        public int AvailableAmmo()
-        {
-            var owner = Owner as PlatformWars.Player;
-            if (owner == null)
-                return 0;
+		public PickupTrigger PickupTrigger { get; protected set; }
 
-            return owner.AmmoCount(AmmoType);
-        }
+		public int AvailableAmmo()
+		{
+			return 999;
+		}
 
-        public override void ActiveStart(Entity ent)
-        {
-            base.ActiveStart(ent);
+		public override void ActiveStart( Entity ent )
+		{
+			base.ActiveStart( ent );
 
-            TimeSinceDeployed = 0;
-        }
+			TimeSinceDeployed = 0;
+		}
 
-        public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
+		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
 
-        public override void Spawn()
-        {
-            base.Spawn();
+		public override void Spawn()
+		{
+			base.Spawn();
 
-            SetModel("weapons/rust_pistol/rust_pistol.vmdl");
+			SetModel( "weapons/rust_pistol/rust_pistol.vmdl" );
 
-            PickupTrigger = new PickupTrigger();
-            PickupTrigger.Parent = this;
-            PickupTrigger.WorldPos = WorldPos;
-        }
+			PickupTrigger = new PickupTrigger();
+			PickupTrigger.Parent = this;
+			PickupTrigger.Position = Position;
+		}
 
-        public override void Reload()
-        {
-            if (IsReloading)
-                return;
+		public override void Reload()
+		{
+			if ( IsReloading )
+				return;
 
-            if (AmmoClip >= ClipSize)
-                return;
+			if ( AmmoClip >= ClipSize )
+				return;
 
-            TimeSinceReload = 0;
+			TimeSinceReload = 0;
+			StartReloadEffects();
 
-            if (Owner is PlatformWars.Player player)
-            {
-                if (player.AmmoCount(AmmoType) <= 0)
-                    return;
+			IsReloading = true;
 
-                StartReloadEffects();
-            }
+			(Owner as AnimEntity).SetAnimParam( "b_reload", true );
 
-            IsReloading = true;
-            Owner.SetAnimParam("b_reload", true);
-            StartReloadEffects();
-        }
+			StartReloadEffects();
+		}
 
-        public override void OnPlayerControlTick(Sandbox.Player owner)
-        {
-            if (TimeSinceDeployed < 0.6f)
-                return;
+		public override void Simulate( Client owner )
+		{
+			if ( TimeSinceDeployed < 0.6f )
+				return;
 
-            if (!IsReloading)
-            {
-                base.OnPlayerControlTick(owner);
-            }
+			if ( !IsReloading )
+			{
+				base.Simulate( owner );
+			}
 
-            if (IsReloading && TimeSinceReload > ReloadTime)
-            {
-                OnReloadFinish();
-            }
-        }
+			if ( IsReloading && TimeSinceReload > ReloadTime )
+			{
+				OnReloadFinish();
+			}
+		}
 
-        public virtual void OnReloadFinish()
-        {
-            IsReloading = false;
+		public virtual void OnReloadFinish()
+		{
+			IsReloading = false;
+		}
 
-            if (Owner is PlatformWars.Player player)
-            {
-                var ammo = player.TakeAmmo(AmmoType, ClipSize - AmmoClip);
-                if (ammo == 0)
-                    return;
+		[ClientRpc]
+		public virtual void StartReloadEffects()
+		{
+			ViewModelEntity?.SetAnimParam( "reload", true );
 
-                AmmoClip += ammo;
-            }
-        }
+			// TODO - player third person model reload
+		}
 
-        [ClientRpc]
-        public virtual void StartReloadEffects()
-        {
-            ViewModelEntity?.SetAnimParam("reload", true);
+		public override void AttackPrimary()
+		{
+			TimeSincePrimaryAttack = 0;
+			TimeSinceSecondaryAttack = 0;
 
-            // TODO - player third person model reload
-        }
+			//
+			// Tell the clients to play the shoot effects
+			//
+			ShootEffects();
 
-        public override void AttackPrimary()
-        {
-            TimeSincePrimaryAttack = 0;
-            TimeSinceSecondaryAttack = 0;
+			//
+			// ShootBullet is coded in a way where we can have bullets pass through shit
+			// or bounce off shit, in which case it'll return multiple results
+			//
+			foreach ( var tr in TraceBullet( Owner.EyePos, Owner.EyePos + Owner.EyeRot.Forward * 5000 ) )
+			{
+				tr.Surface.DoBulletImpact( tr );
 
-            //
-            // Tell the clients to play the shoot effects
-            //
-            ShootEffects();
+				if ( !IsServer ) continue;
+				if ( !tr.Entity.IsValid() ) continue;
 
-            //
-            // ShootBullet is coded in a way where we can have bullets pass through shit
-            // or bounce off shit, in which case it'll return multiple results
-            //
-            foreach (var tr in TraceBullet(Owner.EyePos, Owner.EyePos + Owner.EyeRot.Forward * 5000))
-            {
-                tr.Surface.DoBulletImpact(tr);
+				//
+				// We turn predictiuon off for this, so aany exploding effects don't get culled etc
+				//
+				using ( Prediction.Off() )
+				{
+					var damage = DamageInfo.FromBullet( tr.EndPos, Owner.EyeRot.Forward * 100, 15 )
+						.UsingTraceResult( tr )
+						.WithAttacker( Owner )
+						.WithWeapon( this );
 
-                if (!IsServer) continue;
-                if (!tr.Entity.IsValid()) continue;
+					tr.Entity.TakeDamage( damage );
+				}
+			}
+		}
 
-                //
-                // We turn predictiuon off for this, so aany exploding effects don't get culled etc
-                //
-                using (Prediction.Off())
-                {
-                    var damage = DamageInfo.FromBullet(tr.EndPos, Owner.EyeRot.Forward * 100, 15)
-                        .UsingTraceResult(tr)
-                        .WithAttacker(Owner)
-                        .WithWeapon(this);
+		[ClientRpc]
+		protected virtual void ShootEffects()
+		{
+			Host.AssertClient();
 
-                    tr.Entity.TakeDamage(damage);
-                }
-            }
-        }
+			Log.Info( $"{EffectEntity} {ViewModelEntity} {IsFirstPersonMode} {CurrentView.Viewer} parent:{Parent}" );
+			Particles.Create( "particles/pistol_muzzleflash.vpcf", EffectEntity, "muzzle" );
 
-        [ClientRpc]
-        protected virtual void ShootEffects()
-        {
-            Host.AssertClient();
+			if ( IsLocalPawn )
+			{
+				new Sandbox.ScreenShake.Perlin();
+			}
 
-            Particles.Create("particles/pistol_muzzleflash.vpcf", EffectEntity, "muzzle");
+			ViewModelEntity?.SetAnimParam( "fire", true );
+			CrosshairPanel?.OnEvent( "fire" );
+		}
 
-            if (Owner == Player.Local)
-            {
-                new Sandbox.ScreenShake.Perlin();
-            }
+		/// <summary>
+		/// Shoot a single bullet
+		/// </summary>
+		public virtual void ShootBullet( float spread, float force, float damage, float bulletSize )
+		{
+			var forward = Owner.EyeRot.Forward;
+			forward += (Vector3.Random + Vector3.Random + Vector3.Random + Vector3.Random) * spread * 0.25f;
+			forward = forward.Normal;
 
-            ViewModelEntity?.SetAnimParam("fire", true);
-            CrosshairPanel?.OnEvent("fire");
-        }
+			//
+			// ShootBullet is coded in a way where we can have bullets pass through shit
+			// or bounce off shit, in which case it'll return multiple results
+			//
+			foreach ( var tr in TraceBullet( Owner.EyePos, Owner.EyePos + forward * 5000, bulletSize ) )
+			{
+				tr.Surface.DoBulletImpact( tr );
 
-        /// <summary>
-        /// Shoot a single bullet
-        /// </summary>
-        public virtual void ShootBullet(float spread, float force, float damage, float bulletSize)
-        {
-            var forward = Owner.EyeRot.Forward;
-            forward += (Vector3.Random + Vector3.Random + Vector3.Random + Vector3.Random) * spread * 0.25f;
-            forward = forward.Normal;
+				if ( !IsServer ) continue;
+				if ( !tr.Entity.IsValid() ) continue;
 
-            //
-            // ShootBullet is coded in a way where we can have bullets pass through shit
-            // or bounce off shit, in which case it'll return multiple results
-            //
-            foreach (var tr in TraceBullet(Owner.EyePos, Owner.EyePos + forward * 5000, bulletSize))
-            {
-                tr.Surface.DoBulletImpact(tr);
+				//
+				// We turn predictiuon off for this, so any exploding effects don't get culled etc
+				//
+				using ( Prediction.Off() )
+				{
+					var damageInfo = DamageInfo.FromBullet( tr.EndPos, forward * 100 * force, damage )
+						.UsingTraceResult( tr )
+						.WithAttacker( Owner )
+						.WithWeapon( this );
 
-                if (!IsServer) continue;
-                if (!tr.Entity.IsValid()) continue;
+					tr.Entity.TakeDamage( damageInfo );
+				}
+			}
+		}
 
-                //
-                // We turn predictiuon off for this, so any exploding effects don't get culled etc
-                //
-                using (Prediction.Off())
-                {
-                    var damageInfo = DamageInfo.FromBullet(tr.EndPos, forward * 100 * force, damage)
-                        .UsingTraceResult(tr)
-                        .WithAttacker(Owner)
-                        .WithWeapon(this);
+		public bool TakeAmmo( int amount )
+		{
+			if ( AmmoClip < amount )
+				return false;
 
-                    tr.Entity.TakeDamage(damageInfo);
-                }
-            }
-        }
+			AmmoClip -= amount;
+			return true;
+		}
 
-        public bool TakeAmmo(int amount)
-        {
-            if (AmmoClip < amount)
-                return false;
+		[ClientRpc]
+		public virtual void DryFire()
+		{
+			// CLICK
+		}
 
-            AmmoClip -= amount;
-            return true;
-        }
+		public override void CreateViewModel()
+		{
+			Host.AssertClient();
 
-        [ClientRpc]
-        public virtual void DryFire()
-        {
-            // CLICK
-        }
+			if ( string.IsNullOrEmpty( ViewModelPath ) )
+				return;
 
-        public override void CreateViewModel()
-        {
-            Host.AssertClient();
+			ViewModelEntity = new ViewModel();
+			ViewModelEntity.Position = Position;
+			ViewModelEntity.Owner = Owner;
+			ViewModelEntity.EnableViewmodelRendering = true;
+			ViewModelEntity.SetModel( ViewModelPath );
+		}
 
-            if (string.IsNullOrEmpty(ViewModelPath))
-                return;
+		public override void CreateHudElements()
+		{
+			if ( Local.Hud == null ) return;
 
-            ViewModelEntity = new ViewModel();
-            ViewModelEntity.WorldPos = WorldPos;
-            ViewModelEntity.Owner = Owner;
-            ViewModelEntity.EnableViewmodelRendering = true;
-            ViewModelEntity.SetModel(ViewModelPath);
-        }
-
-        public override void CreateHudElements()
-        {
-            if (Hud.CurrentPanel == null)
-                return;
-
-            // FIXME: Add a crosshair.
-            /*
+			// FIXME
+			/*
             CrosshairPanel = new Crosshair();
-            CrosshairPanel.Parent = Hud.CurrentPanel;
-            CrosshairPanel.AddClass(ClassInfo.Name);
+            CrosshairPanel.Parent = Local.Hud;
+            CrosshairPanel.AddClass( ClassInfo.Name );
             */
-        }
+		}
 
-        public bool IsUsable()
-        {
-            if (AmmoClip > 0)
-                return true;
+		public bool IsUsable()
+		{
+			if ( AmmoClip > 0 ) return true;
+			return AvailableAmmo() > 0;
+		}
 
-            return AvailableAmmo() > 0;
-        }
+		public override void OnCarryStart( Entity carrier )
+		{
+			base.OnCarryStart( carrier );
 
-        public override void OnCarryStart(Entity carrier)
-        {
-            base.OnCarryStart(carrier);
+			if ( PickupTrigger.IsValid() )
+			{
+				PickupTrigger.EnableTouch = false;
+			}
+		}
 
-            if (PickupTrigger.IsValid())
-            {
-                PickupTrigger.EnableTouch = false;
-            }
-        }
+		public override void OnCarryDrop( Entity dropper )
+		{
+			base.OnCarryDrop( dropper );
 
-        public override void OnCarryDrop(Entity dropper)
-        {
-            base.OnCarryDrop(dropper);
+			if ( PickupTrigger.IsValid() )
+			{
+				PickupTrigger.EnableTouch = true;
+			}
+		}
 
-            if (PickupTrigger.IsValid())
-            {
-                PickupTrigger.EnableTouch = true;
-            }
-        }
-
-    }
+	}
 
 }

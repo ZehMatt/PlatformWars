@@ -5,7 +5,7 @@ namespace PlatformWars.Weapons
 	[Library( "weapon_pw_pistol", Title = "Pistol" )]
 	partial class Pistol : Base
 	{
-		public const float Damage = 10.0f;
+		public const float Damage = 50.0f;
 
 		public override string ViewModelPath => "weapons/rust_pistol/v_rust_pistol.vmdl";
 
@@ -48,7 +48,7 @@ namespace PlatformWars.Weapons
 			//
 			// Shoot the bullets
 			//
-			ShootBullet( 0.05f, 1.5f, Damage, 3.0f );
+			ShootBullet( 0.05f, 50.5f, Damage, 3.0f );
 		}
 	}
 

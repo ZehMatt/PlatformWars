@@ -17,7 +17,7 @@ namespace PlatformWars.Terrain
 		void CreatePlatform( Vector3 pos )
 		{
 			var crate = Manager.Create<PlatformWars.Entities.Platform>();
-			crate.WorldPos = pos;
+			crate.Position = pos;
 
 			var phys = crate.PhysicsBody;
 			if ( phys != null )
@@ -26,7 +26,7 @@ namespace PlatformWars.Terrain
 			}
 		}
 
-		public async void Generate( Vector3 pos, int w, int l, int h, int seed = 0 )
+		public async void Generate( Vector3 pos, int w, int l, int h, int seed = 1 )
 		{
 			if ( Generating )
 				return;
@@ -35,8 +35,10 @@ namespace PlatformWars.Terrain
 
 			var iter = 0;
 
-			float offsetX = (float)Rand.Float() * w;
-			float offsetY = (float)Rand.Float() * l;
+			var prng = new System.Random( seed );
+
+			float offsetX = (float)prng.NextDouble() * l;
+			float offsetY = (float)prng.NextDouble() * l;
 
 			foreach ( var ent in Entity.All )
 			{
@@ -85,8 +87,8 @@ namespace PlatformWars.Terrain
 			iter = 0;
 			resolution = 3.0f;
 
-			offsetX = (float)Rand.Float() * w;
-			offsetY = (float)Rand.Float() * l;
+			offsetX = (float)prng.NextDouble() * l;
+			offsetY = (float)prng.NextDouble() * l;
 
 			for ( int x = 0; x < w; x++ )
 			{
@@ -130,8 +132,8 @@ namespace PlatformWars.Terrain
 			iter = 0;
 			resolution = 3.0f;
 
-			offsetX = (float)Rand.Float() * w;
-			offsetY = (float)Rand.Float() * l;
+			offsetX = (float)prng.NextDouble() * l;
+			offsetY = (float)prng.NextDouble() * l;
 
 			for ( int x = 0; x < w; x++ )
 			{

@@ -95,7 +95,7 @@ namespace PlatformWars.UI.Huds
 		{
 			var state = roundMgr.GetState();
 			var activePly = roundMgr.GetActivePlayer();
-			var localPly = Player.Local;
+			var localPly = Local.Client;
 
 			var text = "";
 			switch ( state )

@@ -42,7 +42,7 @@ namespace PlatformWars
 			var currentPly = GetActivePlayer();
 			if ( currentPly != null )
 			{
-				currentPly.Camera = new Cameras.Spectate();
+				currentPly.SetCameraMode( Cameras.Mode.Spectate );
 			}
 
 			var ply = GetNextPlayer();

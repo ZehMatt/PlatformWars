@@ -9,7 +9,7 @@ namespace PlatformWars
 		ModelEntity shoes;
 		ModelEntity hat;
 
-		bool dressed = false;
+		bool dressed = true;
 
 		static readonly string[] Pants =
 		{

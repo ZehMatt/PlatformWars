@@ -2,145 +2,125 @@
 
 namespace PlatformWars
 {
-    partial class Pawn : AnimEntity
-    {
-        [Net]
-        Player PlayerOwner { get; set; }
+	partial class Pawn : Sandbox.Player
+	{
+		[Net]
+		Player PlayerOwner { get; set; }
 
-        public Camera Camera = new FirstPersonCamera();
+		[Net]
+		EntityHandle<ModelEntity> Ragdoll { get; set; }
 
-        public const int MaxHealth = 250;
+		public const int MaxHealth = 250;
 
-        public Pawn()
-        {
-        }
+		RealTimeSince DeathTime;
 
-        public override void Spawn()
-        {
-            LifeState = LifeState.Alive;
-            Health = MaxHealth;
-        }
+		public Pawn()
+		{
+			Transmit = TransmitType.Always;
+		}
 
-        public void AssignPlayer(Player ply)
-        {
-            PlayerOwner = ply;
-        }
+		public override void BuildInput( InputBuilder input )
+		{
+			var roundMgr = RoundManager.Get();
+			if ( roundMgr != null && !roundMgr.CanPawnMove( this ) )
+			{
+				input.Clear();
+			}
 
-        public Player GetPlayer()
-        {
-            return PlayerOwner;
-        }
+			base.BuildInput( input );
+		}
 
-        public void Reset(Vector3 pos)
-        {
-            var ply = GetPlayer();
-            var controller = ply.GetActiveController() as WalkController;
-            var bodyGirth = controller.BodyGirth * 0.5f;
+		public override void Spawn()
+		{
+			LifeState = LifeState.Alive;
+			Health = MaxHealth;
+		}
 
-            SetModel("models/citizen/citizen.vmdl");
-            //SetupPhysicsFromModel(PhysicsMotionType.Dynamic);
-            SetupPhysicsFromOBB(PhysicsMotionType.Dynamic, new Vector3(-bodyGirth, -bodyGirth, 0), new Vector3(bodyGirth, bodyGirth, controller.BodyHeight));
+		public void AssignPlayer( Player ply )
+		{
+			PlayerOwner = ply;
+		}
 
-            WorldPos = pos;
-            EnableAllCollisions = true;
-            EnableDrawing = true;
-            EnableHideInFirstPerson = true;
-            EnableShadowInFirstPerson = true;
-            PhysicsEnabled = true;
-            MoveType = MoveType.Physics;
+		public Player GetPlayer()
+		{
+			return PlayerOwner;
+		}
 
-            // THIS IS ALL SORTS OF WRONG.
-            var plyPhysics = ply.PhysicsBody;
-            if (PhysicsBody != null && plyPhysics != null)
-            {
-                PhysicsBody.Wake();
-                PhysicsBody.MotionEnabled = true;
-                PhysicsBody.EnableAutoSleeping = false;
-                PhysicsBody.Mass = plyPhysics.Mass;
-                PhysicsBody.LocalMassCenter = plyPhysics.LocalMassCenter;
-                PhysicsBody.LinearDamping = plyPhysics.LinearDamping;
-                PhysicsBody.LinearDrag = plyPhysics.LinearDrag;
-                PhysicsBody.AngularDamping = plyPhysics.AngularDamping;
-                PhysicsBody.AngularDrag = plyPhysics.AngularDrag;
-                PhysicsBody.GravityScale = plyPhysics.GravityScale;
-                PhysicsBody.SpeculativeContactEnabled = plyPhysics.SpeculativeContactEnabled;
-                PhysicsBody.Pos = WorldPos;
-            }
+		public void Reset( Vector3 pos )
+		{
+			Host.AssertServer();
 
-            Dress();
-        }
+			SetModel( "models/citizen/citizen.vmdl" );
 
-        DamageInfo LastDamage;
+			Controller = new WalkController();
+			Animator = new StandardPlayerAnimator();
+			Camera = new Cameras.FPS();
 
-        public override void TakeDamage(DamageInfo info)
-        {
-            base.TakeDamage(info);
+			EnableAllCollisions = true;
+			EnableDrawing = true;
+			EnableHideInFirstPerson = true;
+			EnableShadowInFirstPerson = true;
+			Position = pos;
 
-            LastDamage = info;
-        }
+			LifeState = LifeState.Alive;
+			Velocity = Vector3.Zero;
 
-        public override void OnKilled()
-        {
-            if (LifeState == LifeState.Dead)
-                return;
+			CreateHull();
+			ResetInterpolation();
+			Dress();
+		}
 
-            LifeState = LifeState.Dead;
+		DamageInfo LastDamage;
 
-            Log.Info("Pawn got killed");
+		public override void TakeDamage( DamageInfo info )
+		{
+			base.TakeDamage( info );
 
-            var ragdoll = CreateRagdoll(LastDamage.Force, GetHitboxBone(LastDamage.HitboxIndex));
+			LastDamage = info;
+		}
 
-            var ply = GetPlayer();
-            if (ply != null)
-            {
-                SetParent(null);
+		public float GetDeathTime()
+		{
+			if ( LifeState == LifeState.Alive )
+				return -1.0f;
 
-                // Hide player in case its the current.
-                ply.EnableDrawing = false;
-                ply.Corpse = ragdoll;
-            }
+			return DeathTime;
+		}
 
-            ClearCollisionLayers();
-            EnableDrawing = false;
+		public override void OnKilled()
+		{
+			if ( LifeState == LifeState.Dead )
+				return;
 
-            // We no longer need this entity but keep it a bit
-            // To not spazz out the cameras that actively view the pawn entity.
-            DeleteAsync(10.0f);
+			LifeState = LifeState.Dead;
 
-            var roundMgr = RoundManager.Get();
-            if (roundMgr != null)
-            {
-                roundMgr?.OnPawnKilled(this);
-            }
+			Log.Info( "Pawn got killed" );
 
-            base.OnKilled();
-        }
+			var ragdoll = CreateRagdoll( LastDamage.Force, GetHitboxBone( LastDamage.HitboxIndex ) );
 
-        [Event("physics.step")]
-        void Tick()
-        {
-            if (!IsAuthority)
-                return;
+			ClearCollisionLayers();
+			EnableDrawing = false;
 
-            if (PhysicsBody == null)
-                return;
+			Ragdoll = ragdoll;
+			DeathTime = 0;
 
-            // Keep up-right
-            var rot = PhysicsBody.Rot;
-            if (rot.x != 0 || rot.z != 0)
-            {
-                PhysicsBody.Rot = Rotation.From(0, rot.y, 0);
-            }
+			// NOTE: This pawn/entity will keep existing until the round manager decides otherwise.
+			var roundMgr = RoundManager.Get();
+			if ( roundMgr != null )
+			{
+				roundMgr?.OnPawnKilled( this );
+			}
 
-            PhysicsBody.AngularVelocity = Vector3.Zero;
+			base.OnKilled();
+		}
 
-            var ply = GetPlayer();
-            var controller = ply.GetActiveController() as WalkController;
+		public ModelEntity GetRagdoll()
+		{
+			if ( !Ragdoll.IsValid )
+				return null;
 
-            // FIXME: Try to mimic the player fall, the Pawns are falling way slower.
-            //PhysicsBody.Velocity -= new Vector3(0, 0, controller.Gravity) * Time.Delta;
+			return Ragdoll.Entity;
+		}
 
-        }
-
-    }
+	}
 }

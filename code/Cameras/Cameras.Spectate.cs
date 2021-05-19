@@ -3,7 +3,7 @@
 namespace PlatformWars.Cameras
 {
 
-	partial class Spectate : BaseCamera
+	partial class Spectate : Base
 	{
 		enum SpectateMode
 		{
@@ -24,9 +24,13 @@ namespace PlatformWars.Cameras
 
 		float LookDistance = 400;
 
-		SpectateMode Mode = SpectateMode.Pawn;
+		SpectateMode SpectMode = SpectateMode.Pawn;
 
 		Vector3 OverviewOffset = new Vector3( 0, 0, 300 );
+
+		public Spectate() : base( Mode.Spectate )
+		{
+		}
 
 		public override void Activated()
 		{
@@ -35,13 +39,16 @@ namespace PlatformWars.Cameras
 			Host.AssertClient();
 
 			LookDistance = Cookie.Get( "LookDistance", LookDistance );
-			Mode = Cookie.Get( "Mode", Mode );
+			SpectMode = Cookie.Get( "Mode", SpectMode );
 
 			LookAngles = Rot.Angles();
 			FovOverride = 80;
 
+			Pos = CurrentView.Position;
+			Rot = CurrentView.Rotation;
+
 			// Update new positions also.
-			Update();
+			//Update();
 		}
 
 		public override void Deactivated()
@@ -51,7 +58,7 @@ namespace PlatformWars.Cameras
 
 		public override void Update()
 		{
-			switch ( Mode )
+			switch ( SpectMode )
 			{
 				case SpectateMode.Pawn:
 					SpectateMove();
@@ -65,28 +72,28 @@ namespace PlatformWars.Cameras
 			}
 
 			Pos = Vector3.Lerp( Pos, TargetPos, LerpSpeed * RealTime.Delta );
-			Rot = Rotation.Slerp( Rot, TargetRot, LerpSpeed * RealTime.Delta );
+			Rot = TargetRot;
 			FieldOfView = FovOverride;
 		}
 
 		void CycleMode()
 		{
-			switch ( Mode )
+			switch ( SpectMode )
 			{
 				case SpectateMode.Pawn:
-					Mode = SpectateMode.Free;
+					SpectMode = SpectateMode.Free;
 					break;
 				case SpectateMode.Free:
-					Mode = SpectateMode.Overview;
+					SpectMode = SpectateMode.Overview;
 					break;
 				case SpectateMode.Overview:
-					Mode = SpectateMode.Pawn;
+					SpectMode = SpectateMode.Pawn;
 					break;
 			}
-			Cookie.Set( "Mode", Mode );
+			Cookie.Set( "Mode", SpectMode );
 		}
 
-		public override void BuildInput( ClientInput input )
+		public override void BuildInput( InputBuilder input )
 		{
 			MoveInput = input.AnalogMove;
 			//DebugOverlay.ScreenText(4, $"MoveInput: {MoveInput.ToString()}");
@@ -111,7 +118,7 @@ namespace PlatformWars.Cameras
 
 		void OverviewMove()
 		{
-			var player = Player.Local;
+			var player = Local.Pawn;
 			if ( player == null )
 				return;
 
@@ -130,7 +137,7 @@ namespace PlatformWars.Cameras
 				var pawns = ply.GetPawns();
 				foreach ( var pawn in pawns )
 				{
-					var pos = pawn.WorldPos;
+					var pos = pawn.Position;
 					posCenter += pos;
 					posMin = Vector3.Min( posMin, pos );
 					posMax = Vector3.Max( posMax, pos );
@@ -155,20 +162,15 @@ namespace PlatformWars.Cameras
 			if ( pawn == null )
 				return Vector3.Zero;
 
-			return pawn.GetBoneTransform( pawn.GetBoneIndex( "spine2" ) ).Pos;
+			return pawn.GetBoneTransform( pawn.GetBoneIndex( "spine2" ) ).Position;
 		}
 
 		void SpectateMove()
 		{
-			var player = Player.Local as BasePlayer;
-			if ( player == null )
-				return;
-
 			var pawnPos = GetPawnPos();
 			Pos = pawnPos + GetViewOffset();
 
 			var tr = Trace.Ray( pawnPos, Pos )
-				.Ignore( player )
 				.WorldOnly()
 				.Radius( 4 )
 				.Run();
@@ -178,7 +180,6 @@ namespace PlatformWars.Cameras
 			// without getting initially stuck
 			//
 			tr = Trace.Ray( pawnPos + tr.Direction * (tr.Distance * 0.5f), tr.EndPos )
-				.Ignore( player )
 				.WorldOnly()
 				.Radius( 8 )
 				.Run();
@@ -190,9 +191,6 @@ namespace PlatformWars.Cameras
 
 		Vector3 GetViewOffset()
 		{
-			if ( Player.Local is not BasePlayer player )
-				return Vector3.Zero;
-
 			return LookAngles.Direction * -LookDistance + Vector3.Up * 20;
 		}
 

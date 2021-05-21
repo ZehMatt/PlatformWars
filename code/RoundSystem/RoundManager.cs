@@ -67,7 +67,7 @@ namespace PlatformWars
 		Stack<SavedState> SavedStates = new();
 
 		[Net]
-		Network.NetList<EntityHandle<Player>> ActivePlayers { get; set; } = new();
+		Network.EntityList ActivePlayers { get; set; } = new();
 
 		Dictionary<RoundState, StateActivationDelegate> ActivationHandler = new();
 		Dictionary<RoundState, StateUpdateDelegate> UpdateHandler = new();
@@ -221,11 +221,11 @@ namespace PlatformWars
 			List<Player> res = new();
 			for ( int i = 0; i < ActivePlayers.Count; ++i )
 			{
-				var ent = ActivePlayers.Get( i );
-				if ( !ent.Entity.IsValid() )
+				var ent = ActivePlayers.Get( i ) as Player;
+				if ( ent == null )
 					continue;
 
-				res.Add( ent.Entity as Player );
+				res.Add( ent );
 			}
 			return res;
 		}

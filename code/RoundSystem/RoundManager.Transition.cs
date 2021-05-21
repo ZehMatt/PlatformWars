@@ -30,11 +30,11 @@ namespace PlatformWars
 			if ( index >= ActivePlayers.Count )
 				return null;
 
-			var ent = ActivePlayers.Get( index );
-			if ( !ent.Entity.IsValid() )
+			var ent = ActivePlayers.Get( index ) as Player;
+			if ( ent == null )
 				return null;
 
-			return ent.Entity as Player;
+			return ent;
 		}
 
 		void HandleTransition()

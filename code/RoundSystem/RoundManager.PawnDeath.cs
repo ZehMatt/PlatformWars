@@ -14,7 +14,7 @@ namespace PlatformWars
 		List<SavedGlobalState> SavedDeathStates = new();
 
 		[Net]
-		Network.NetList<EntityHandle<Pawn>> DyingPawns { get; set; } = new();
+		Network.EntityList DyingPawns { get; set; } = new();
 
 		// TODO: Make this a convar.
 		const float MaxPawnDeathTime = 10.0f;
@@ -68,7 +68,7 @@ namespace PlatformWars
 			{
 				bool shouldRemove = false;
 
-				var pawn = DyingPawns.Get( i ).Entity as Pawn;
+				var pawn = DyingPawns.Get( i ) as Pawn;
 				if ( pawn == null )
 				{
 					// What?
@@ -139,12 +139,11 @@ namespace PlatformWars
 			Vector3 pos = Vector3.Zero;
 			for ( int i = 0; i < DyingPawns.Count; ++i )
 			{
-				var ent = DyingPawns.Get( i );
-				if ( !ent.IsValid )
+				var ent = DyingPawns.Get( i ) as Pawn;
+				if ( ent == null )
 					continue;
 
-				var pawn = ent.Entity;
-				var ragdoll = pawn.GetRagdoll();
+				var ragdoll = ent.GetRagdoll();
 				if ( ragdoll == null )
 					continue; // Potentially networked late.
 

@@ -36,25 +36,23 @@ namespace PlatformWars
 	{
 		static readonly Color32[] TeamColors = { Color32.Transparent, Color32.Red, Color32.Green, Color32.Cyan, Color32.Yellow, Color32.Magenta };
 
-		Client _client;
+		[Net]
+		EntityHandle<Entity> _client { get; set; }
 
-		public Client Client { get => _client; }
+		public Client Client { get => _client.Entity as Client; }
 
 		[Net]
-		public Network.NetList<EntityHandle<Pawn>> Pawns { get; set; } = new();
-
-		[NetPredicted]
-		EntityHandle<Pawn> ControlledPawn { get; set; }
+		public Network.EntityList Pawns { get; set; } = new();
 
 		[Net]
 		Team CurrentTeam { get; set; }
 
-		[Net]
-		int ClientId { get; set; }
+		[NetPredicted]
+		EntityHandle<Pawn> ControlledPawn { get; set; }
 
-		public string Name { get => _client.Name; }
+		public string Name { get => Client.Name; }
 
-		public ulong SteamId { get => _client.SteamId; }
+		public ulong SteamId { get => Client.SteamId; }
 
 		Stack<Cameras.Mode> CameraStack = new();
 
@@ -64,33 +62,18 @@ namespace PlatformWars
 
 			Host.AssertServer();
 
-			_client = cl;
-			ClientId = cl.NetworkIdent;
+			_client = cl as Entity;
 
 			Spectate();
 		}
 
 		public Player()
 		{
-			Log.Info( "Player on client" );
-
-			Host.AssertClient();
-			foreach ( var cl in Client.All )
-			{
-				if ( cl.NetworkIdent == ClientId )
-				{
-					_client = cl;
-				}
-			}
-			if ( _client == null )
-			{
-				Log.Error( "Client is unknown!" );
-			}
 		}
 
 		public Pawn GetControlledPawn()
 		{
-			return _client.Pawn as Pawn;
+			return Client.Pawn as Pawn;
 		}
 
 		void ResetPawns()
@@ -99,9 +82,8 @@ namespace PlatformWars
 
 			for ( int i = 0; i < Pawns.Count; i++ )
 			{
-				var pawn = Pawns.Get( i ).Entity;
-
-				if ( !pawn.IsValid() )
+				var pawn = Pawns.Get( i ) as Pawn;
+				if ( pawn == null )
 					continue;
 
 				pawn.Delete();
@@ -132,7 +114,7 @@ namespace PlatformWars
 			for ( int i = 0; i < Pawns.Count; i++ )
 			{
 				var ent = Pawns.Get( i );
-				if ( ent.Entity == pawn )
+				if ( ent == pawn )
 				{
 					Pawns.RemoveAt( i );
 					break;
@@ -145,9 +127,8 @@ namespace PlatformWars
 			var res = new List<Pawn>();
 			for ( int i = 0; i < Pawns.Count; i++ )
 			{
-				var pawn = Pawns.Get( i ).Entity;
-
-				if ( !pawn.IsValid() )
+				var pawn = Pawns.Get( i ) as Pawn;
+				if ( pawn == null )
 					continue;
 
 				res.Add( pawn as Pawn );
@@ -164,14 +145,12 @@ namespace PlatformWars
 
 		public Pawn GetPawn( int index )
 		{
-			var pawn = Pawns.Get( index );
+			var pawn = Pawns.Get( index ) as Pawn;
+
 			if ( pawn == null )
 				return null;
 
-			if ( !pawn.IsValid )
-				return null;
-
-			return pawn.Entity as Pawn;
+			return pawn;
 		}
 
 		public void RemoveControlled()

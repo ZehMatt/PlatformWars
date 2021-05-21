@@ -30,9 +30,10 @@ namespace PlatformWars
 
 		void SetupPawns()
 		{
-			for ( int i = 0; i < ActivePlayers.Count; i++ )
+			var players = GetActivePlayers();
+			for ( int i = 0; i < players.Count; i++ )
 			{
-				var ply = ActivePlayers.Get( i ).Entity as Player;
+				var ply = players[i];
 				ply.SetupPawns( PawnCount );
 			}
 		}

@@ -16,11 +16,6 @@ namespace PlatformWars.Terrain
 		// [ Bit 13 to 16 is type ] [ Bit 0 to 13 is health ]
 		public ushort Raw;
 
-		public Voxel( Entity ent )
-		{
-			Raw = 0;
-		}
-
 		public Voxel( ushort val = 0 )
 		{
 			Raw = val;
@@ -40,7 +35,7 @@ namespace PlatformWars.Terrain
 			}
 			set
 			{
-				Raw &= 0b0001111111111110;
+				Raw &= 0b000111111111111;
 				Raw |= (ushort)((int)value << 13);
 			}
 		}
@@ -49,7 +44,7 @@ namespace PlatformWars.Terrain
 		{
 			get
 			{
-				return (Raw & 0b0001111111111110);
+				return (Raw & 0b000111111111111);
 			}
 			set
 			{
@@ -84,25 +79,10 @@ namespace PlatformWars.Terrain
 			int index = ToIndex( x, y, z );
 			Data[index] = data;
 		}
-
-		public override bool NetWrite( NetWrite write )
-		{
-			base.NetWrite( write );
-
-			return true;
-		}
-
-		public override bool NetRead( NetRead read )
-		{
-			base.NetRead( read );
-
-			return true;
-		}
 	}
 
-	partial class Chunk : AnimEntity
+	partial class Chunk : Entity
 	{
-		[Net]
 		ChunkData Data { get; set; } = new();
 
 		public override void Spawn()

@@ -8,19 +8,26 @@ namespace PlatformWars
 	partial class Game : Sandbox.Game
 	{
 		[Net]
-		EntityHandle<RoundManager> RoundManager { get; set; }
+		public RoundManager RoundManager { get; set; }
 
 		[Net]
-		EntityHandle<Terrain.Manager> TerrainManager { get; set; }
+		public Terrain.Manager TerrainManager { get; set; }
 
 		List<Player> Players = new();
 
-		public Game()
+		public override void Spawn()
 		{
-			if ( IsServer )
-			{
-				new PlatformWars.UI.Hud();
-			}
+			base.Spawn();
+
+			new PlatformWars.UI.Hud();
+
+			RoundManager = Create<RoundManager>();
+			TerrainManager = Create<Terrain.Manager>();
+		}
+
+		public override void ClientSpawn()
+		{
+			base.Spawn();
 		}
 
 		public RoundManager GetRoundManager()
@@ -50,12 +57,7 @@ namespace PlatformWars
 		public override void PostLevelLoaded()
 		{
 			base.PostLevelLoaded();
-
-			RoundManager = Create<RoundManager>();
-			TerrainManager = Create<Terrain.Manager>();
 		}
-
-
 	}
 
 }

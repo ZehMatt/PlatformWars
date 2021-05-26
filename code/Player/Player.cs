@@ -37,18 +37,18 @@ namespace PlatformWars
 		static readonly Color32[] TeamColors = { Color32.Transparent, Color32.Red, Color32.Green, Color32.Cyan, Color32.Yellow, Color32.Magenta };
 
 		[Net]
-		EntityHandle<Entity> _client { get; set; }
+		Entity _client { get; set; }
 
-		public Client Client { get => _client.Entity as Client; }
+		public Client Client { get => _client as Client; }
 
 		[Net]
-		public Network.EntityList Pawns { get; set; } = new();
+		public List<Pawn> Pawns { get; set; } = new();
 
 		[Net]
 		Team CurrentTeam { get; set; }
 
-		[NetPredicted]
-		EntityHandle<Pawn> ControlledPawn { get; set; }
+		[Net, Predicted]
+		Pawn ControlledPawn { get; set; }
 
 		public string Name { get => Client.Name; }
 
@@ -82,7 +82,7 @@ namespace PlatformWars
 
 			for ( int i = 0; i < Pawns.Count; i++ )
 			{
-				var pawn = Pawns.Get( i ) as Pawn;
+				var pawn = Pawns[i];
 				if ( pawn == null )
 					continue;
 
@@ -113,7 +113,7 @@ namespace PlatformWars
 		{
 			for ( int i = 0; i < Pawns.Count; i++ )
 			{
-				var ent = Pawns.Get( i );
+				var ent = Pawns[i];
 				if ( ent == pawn )
 				{
 					Pawns.RemoveAt( i );
@@ -127,7 +127,7 @@ namespace PlatformWars
 			var res = new List<Pawn>();
 			for ( int i = 0; i < Pawns.Count; i++ )
 			{
-				var pawn = Pawns.Get( i ) as Pawn;
+				var pawn = Pawns[i];
 				if ( pawn == null )
 					continue;
 
@@ -145,7 +145,7 @@ namespace PlatformWars
 
 		public Pawn GetPawn( int index )
 		{
-			var pawn = Pawns.Get( index ) as Pawn;
+			var pawn = Pawns[index];
 
 			if ( pawn == null )
 				return null;

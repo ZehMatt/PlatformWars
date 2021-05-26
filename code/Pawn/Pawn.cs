@@ -8,7 +8,7 @@ namespace PlatformWars
 		Player PlayerOwner { get; set; }
 
 		[Net]
-		EntityHandle<ModelEntity> Ragdoll { get; set; }
+		ModelEntity Ragdoll { get; set; }
 
 		public const int MaxHealth = 250;
 
@@ -54,7 +54,6 @@ namespace PlatformWars
 
 			Controller = new WalkController();
 			Animator = new StandardPlayerAnimator();
-			Camera = new Cameras.FPS();
 
 			EnableAllCollisions = true;
 			EnableDrawing = true;
@@ -116,10 +115,7 @@ namespace PlatformWars
 
 		public ModelEntity GetRagdoll()
 		{
-			if ( !Ragdoll.IsValid )
-				return null;
-
-			return Ragdoll.Entity;
+			return Ragdoll;
 		}
 
 	}

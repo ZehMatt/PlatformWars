@@ -46,20 +46,20 @@ namespace PlatformWars
 		[ServerVar]
 		public static bool platformwars_debug { get; set; } = true;
 
-		[NetPredicted]
+		[Net, Predicted]
 		bool StatePaused { get; set; }
 
 		[Net]
 		float StateTime { get; set; }
 
-		[NetPredicted]
+		[Net, Predicted]
 		RoundState State { get; set; }
 
-		[NetPredicted]
+		[Net, Predicted]
 		Player ActivePlayer { get; set; }
 
 		[Net]
-		EntityHandle<Pawn> ActivePawn { get; set; }
+		Pawn ActivePawn { get; set; }
 
 		[Net]
 		int WorldSeed { get; set; } = 1;
@@ -67,7 +67,7 @@ namespace PlatformWars
 		Stack<SavedState> SavedStates = new();
 
 		[Net]
-		Network.EntityList ActivePlayers { get; set; } = new();
+		List<Player> ActivePlayers { get; set; } = new();
 
 		Dictionary<RoundState, StateActivationDelegate> ActivationHandler = new();
 		Dictionary<RoundState, StateUpdateDelegate> UpdateHandler = new();
@@ -84,6 +84,8 @@ namespace PlatformWars
 
 		public RoundManager()
 		{
+			Transmit = TransmitType.Always;
+
 			// FIXME: Make this a bit more generic, its kept as delegates so it all can access
 			// the round manager without jumping through another hoop.
 
@@ -196,10 +198,7 @@ namespace PlatformWars
 
 		public Pawn GetActivePawn()
 		{
-			if ( !ActivePawn.IsValid )
-				return null;
-
-			return ActivePawn.Entity as Pawn;
+			return ActivePawn;
 		}
 
 		public bool CanPawnMove( Pawn pawn )
@@ -221,7 +220,7 @@ namespace PlatformWars
 			List<Player> res = new();
 			for ( int i = 0; i < ActivePlayers.Count; ++i )
 			{
-				var ent = ActivePlayers.Get( i ) as Player;
+				var ent = ActivePlayers[i];
 				if ( ent == null )
 					continue;
 

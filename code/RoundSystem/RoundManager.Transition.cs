@@ -7,7 +7,7 @@ namespace PlatformWars
 		[ServerVar]
 		public static float platformwars_transition_time { get; set; } = 1.0f;
 
-		[NetPredicted]
+		[Net, Predicted]
 		int CurrentCycle { get; set; } = 0;
 
 		public Player GetNextPlayer()
@@ -30,7 +30,7 @@ namespace PlatformWars
 			if ( index >= ActivePlayers.Count )
 				return null;
 
-			var ent = ActivePlayers.Get( index ) as Player;
+			var ent = ActivePlayers[index];
 			if ( ent == null )
 				return null;
 

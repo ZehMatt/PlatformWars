@@ -26,7 +26,7 @@ namespace PlatformWars.Cameras
 
 		SpectateMode SpectMode = SpectateMode.Pawn;
 
-		Vector3 OverviewOffset = new Vector3( 0, 0, 300 );
+		Vector3 OverviewOffset = new Vector3( 0, 0, 400 );
 
 		public Spectate() : base( Mode.Spectate )
 		{
@@ -118,10 +118,6 @@ namespace PlatformWars.Cameras
 
 		void OverviewMove()
 		{
-			var player = Local.Pawn;
-			if ( player == null )
-				return;
-
 			var roundMgr = RoundManager.Get();
 			if ( roundMgr == null )
 				return;
@@ -129,7 +125,7 @@ namespace PlatformWars.Cameras
 			var activePlayers = roundMgr.GetActivePlayers();
 			var posMin = Vector3.Zero;
 			var posMax = Vector3.Zero;
-			var posCenter = Vector3.Zero;
+			var posFocusAt = Vector3.Zero;
 			var totalPawns = 0;
 
 			foreach ( var ply in activePlayers )
@@ -138,18 +134,31 @@ namespace PlatformWars.Cameras
 				foreach ( var pawn in pawns )
 				{
 					var pos = pawn.Position;
-					posCenter += pos;
+					posFocusAt += pos;
 					posMin = Vector3.Min( posMin, pos );
 					posMax = Vector3.Max( posMax, pos );
 					totalPawns++;
 				}
 			}
 
-			if ( totalPawns > 0 )
-				posCenter /= totalPawns;
+			var activePawn = roundMgr.GetActivePawn();
+			if ( activePawn != null )
+			{
+				posFocusAt = activePawn.Position;
+			}
+			else
+			{
+				if ( totalPawns > 0 )
+					posFocusAt /= totalPawns;
+			}
 
-			TargetPos = OverviewOffset + posCenter + GetViewOffset();
-			TargetRot = player.EyeRot;
+			var minMaxDistance = System.Math.Clamp( Vector3.DistanceBetween( posMin, posMax ), 400.0f, 1000.0f );
+
+			var posCamera = posFocusAt + new Vector3( 0, 0, minMaxDistance ) + GetViewOffset( minMaxDistance );
+			var delta = posFocusAt - posCamera;
+
+			TargetPos = posCamera;
+			TargetRot = Rotation.From( delta.EulerAngles );
 		}
 
 		Vector3 GetPawnPos()
@@ -192,6 +201,11 @@ namespace PlatformWars.Cameras
 		Vector3 GetViewOffset()
 		{
 			return LookAngles.Direction * -LookDistance + Vector3.Up * 20;
+		}
+
+		Vector3 GetViewOffset( float distance )
+		{
+			return LookAngles.Direction * -distance + Vector3.Up * 20;
 		}
 
 		void FreeMove()

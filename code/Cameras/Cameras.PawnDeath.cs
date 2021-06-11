@@ -5,6 +5,13 @@ namespace PlatformWars.Cameras
 	public class PawnDeathCam : Base
 	{
 		Vector3 FocusPoint;
+		Angles LookAngles;
+		float FovOverride = 0;
+
+		public Vector3 TargetPos;
+		public Rotation TargetRot;
+
+		float LookDistance = 400;
 
 		public PawnDeathCam() : base( Mode.PawnDeath )
 		{
@@ -16,21 +23,48 @@ namespace PlatformWars.Cameras
 
 			FocusPoint = CurrentView.Position - GetViewOffset();
 			FieldOfView = 70;
+
+			LookAngles = Rot.Angles();
+			FovOverride = 80;
+
+			Pos = CurrentView.Position;
+			Rot = CurrentView.Rotation;
+		}
+		public override void BuildInput( InputBuilder input )
+		{
+			LookAngles += input.AnalogLook * (FovOverride / 80.0f);
+			LookAngles.roll = 0;
+
+			input.Clear();
+			input.StopProcessing = true;
 		}
 
 		public override void Update()
 		{
-			var player = Local.Pawn;
-			if ( player == null ) return;
+			var targetPos = GetSpectatePoint();
 
-			// lerp the focus point
-			FocusPoint = Vector3.Lerp( FocusPoint, GetSpectatePoint(), Time.Delta * 20.0f );
+			Pos = targetPos + GetViewOffset();
 
-			Pos = FocusPoint + GetViewOffset();
-			Rot = player.EyeRot;
+			var tr = Trace.Ray( GetSpectatePoint(), Pos )
+				.WorldOnly()
+				.Radius( 4 )
+				.Run();
 
-			FieldOfView = FieldOfView.LerpTo( 50, Time.Delta * 20.0f );
-			Viewer = null;
+			//
+			// Doing a second trace at the half way point is a little trick to allow a larger camera collision radius
+			// without getting initially stuck
+			//
+			tr = Trace.Ray( targetPos + tr.Direction * (tr.Distance * 0.5f), tr.EndPos )
+				.WorldOnly()
+				.Radius( 8 )
+				.Run();
+
+			var delta = targetPos - tr.EndPos;
+			TargetPos = tr.EndPos;
+			TargetRot = Rotation.From( delta.EulerAngles );
+
+			Pos = Vector3.Lerp( Pos, TargetPos, Time.Delta * 10.0f );
+			Rot = Rotation.Lerp( Rot, TargetRot, Time.Delta * 10.0f );
 		}
 
 		public virtual Vector3 GetSpectatePoint()
@@ -44,10 +78,7 @@ namespace PlatformWars.Cameras
 
 		public virtual Vector3 GetViewOffset()
 		{
-			var player = Local.Pawn;
-			if ( player == null ) return Vector3.Zero;
-
-			return player.EyeRot.Forward * (-130 * player.Scale) + Vector3.Up * (20 * player.Scale);
+			return LookAngles.Direction * -LookDistance + Vector3.Up * 20;
 		}
 	}
 }

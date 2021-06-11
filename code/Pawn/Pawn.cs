@@ -17,6 +17,7 @@ namespace PlatformWars
 		public Pawn()
 		{
 			Transmit = TransmitType.Always;
+			Inventory = new Inventory( this );
 		}
 
 		public override void BuildInput( InputBuilder input )
@@ -25,9 +26,12 @@ namespace PlatformWars
 			if ( roundMgr != null && !roundMgr.CanPawnMove( this ) )
 			{
 				input.Clear();
+				input.ClearButtons();
 			}
-
-			base.BuildInput( input );
+			else
+			{
+				base.BuildInput( input );
+			}
 		}
 
 		public override void Spawn()

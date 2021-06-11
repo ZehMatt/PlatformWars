@@ -54,7 +54,7 @@ namespace PlatformWars.Terrain
 		}
 	}
 
-	public class ChunkData : NetworkClass
+	public class ChunkData : NetworkComponent
 	{
 		public const int SizeX = 32;
 		public const int SizeY = 32;

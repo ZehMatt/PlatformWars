@@ -244,7 +244,10 @@ namespace PlatformWars
 			}
 
 			AddDyingPawn( pawn );
-			PushState( RoundState.PawnDeath );
+			if ( State != RoundState.PawnDeath )
+			{
+				PushState( RoundState.PawnDeath );
+			}
 		}
 
 		public float GetStateTime()

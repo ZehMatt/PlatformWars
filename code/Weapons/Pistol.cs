@@ -25,7 +25,7 @@ namespace PlatformWars.Weapons
 
 		public override bool CanPrimaryAttack()
 		{
-			return base.CanPrimaryAttack() && Owner.Input.Pressed( InputButton.Attack1 );
+			return base.CanPrimaryAttack() && Input.Pressed( InputButton.Attack1 );
 		}
 
 		public override void AttackPrimary()

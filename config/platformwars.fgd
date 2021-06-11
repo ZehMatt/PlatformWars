@@ -1,0 +1,60 @@
+// 
+// PlatformWars.Game : Sandbox.Game 
+// 
+@PointClass = platformwars : ""
+[
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+]
+
+// 
+// PlatformWars.StateEntity : Sandbox.Prop 
+// 
+@PointClass  model() 
+metadata
+{
+}
+= ent_stateent : ""
+[
+	model(studio) [report]: "World Model"
+	skin(materialgroup) [ group="Render Properties" ] : "Skin" : "default" : "Some models have multiple versions of their textures, called skins."
+	bodygroups(bodygroupchoices) [ group="Render Properties" ] : "Body Groups" : "" 
+	disableshadows(boolean) [ group="Misc" ] : "Disable Shadows" : 0 : "Used to disable dynamic shadows on this entity." 
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+	collisiongroupoverride(integer) : "CollisionGroupOverride" :  : ""
+
+]
+
+// 
+// PlatformWars.RoundManager : Sandbox.Entity 
+// 
+@PointClass = ent_roundmanager : ""
+[
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+]
+
+// 
+// PlatformWars.Weapons.Pistol : PlatformWars.Weapons.Base 
+// 
+@PointClass = weapon_pw_pistol : ""
+[
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+]
+
+// 
+// PlatformWars.Entities.Platform : Sandbox.Prop 
+// 
+@PointClass  model() 
+metadata
+{
+}
+= ent_platform : ""
+[
+	model(studio) [report]: "World Model"
+	skin(materialgroup) [ group="Render Properties" ] : "Skin" : "default" : "Some models have multiple versions of their textures, called skins."
+	bodygroups(bodygroupchoices) [ group="Render Properties" ] : "Body Groups" : "" 
+	disableshadows(boolean) [ group="Misc" ] : "Disable Shadows" : 0 : "Used to disable dynamic shadows on this entity." 
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+	collisiongroupoverride(integer) : "CollisionGroupOverride" :  : ""
+
+]
+

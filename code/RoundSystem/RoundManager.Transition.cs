@@ -42,6 +42,7 @@ namespace PlatformWars
 			var currentPly = GetActivePlayer();
 			if ( currentPly != null )
 			{
+				currentPly.RemoveControlled();
 				currentPly.SetCameraMode( Cameras.Mode.Spectate );
 			}
 

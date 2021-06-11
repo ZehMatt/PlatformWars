@@ -16,7 +16,6 @@ namespace PlatformWars
 	class TemporaryClient : Sandbox.Client
 	{
 		public IReadOnlyList<Client> All { get => Sandbox.Client.All; }
-		public UserInput Input { get { return new UserInput(); } }
 		public ulong SteamId { get { return 0; } }
 		public string Name { get { return ""; } }
 		public int NetworkIdent { get => 0; }
@@ -47,9 +46,6 @@ namespace PlatformWars
 		[Net]
 		Team CurrentTeam { get; set; }
 
-		[Net, Predicted]
-		Pawn ControlledPawn { get; set; }
-
 		public string Name { get => Client.Name; }
 
 		public ulong SteamId { get => Client.SteamId; }
@@ -59,6 +55,7 @@ namespace PlatformWars
 		public Player( Client cl )
 		{
 			Transmit = TransmitType.Always;
+			Inventory = new Inventory( this );
 
 			Host.AssertServer();
 
@@ -90,7 +87,7 @@ namespace PlatformWars
 			}
 
 			Pawns.Clear();
-			ControlledPawn = null;
+			Client.Pawn = null;
 		}
 
 		public void SetupPawns( int count )
@@ -162,6 +159,7 @@ namespace PlatformWars
 		public void ControllPawn( Pawn pawn )
 		{
 			Client.Pawn = pawn;
+
 			SetCameraMode( Cameras.Mode.FPS );
 		}
 
@@ -173,7 +171,7 @@ namespace PlatformWars
 
 		public void PushCameraMode( Cameras.Mode newMode )
 		{
-			var current = Camera as Cameras.Base;
+			var current = Client.Camera as Cameras.Base;
 			Assert.NotNull( current );
 
 			CameraStack.Push( current.Mode );

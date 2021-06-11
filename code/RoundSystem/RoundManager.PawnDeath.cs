@@ -32,8 +32,6 @@ namespace PlatformWars
 			if ( !IsAuthority )
 				return;
 
-			var cam = new Cameras.PawnDeathCam();
-
 			foreach ( var ply in GetActivePlayers() )
 			{
 				ply.PushCameraMode( Cameras.Mode.PawnDeath );
@@ -107,8 +105,6 @@ namespace PlatformWars
 					DyingPawns.RemoveAt( i );
 					if ( DyingPawns.Count == 0 )
 						break;
-
-					i--;
 				}
 				else
 				{

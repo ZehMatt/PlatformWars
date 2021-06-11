@@ -63,9 +63,7 @@ namespace PlatformWars.Weapons
 
 			IsReloading = true;
 
-			(Owner as AnimEntity).SetAnimParam( "b_reload", true );
-
-			StartReloadEffects();
+			(Owner as AnimEntity).SetAnimBool( "b_reload", true );
 		}
 
 		public override void Simulate( Client owner )
@@ -92,7 +90,7 @@ namespace PlatformWars.Weapons
 		[ClientRpc]
 		public virtual void StartReloadEffects()
 		{
-			ViewModelEntity?.SetAnimParam( "reload", true );
+			ViewModelEntity?.SetAnimBool( "reload", true );
 
 			// TODO - player third person model reload
 		}
@@ -146,7 +144,7 @@ namespace PlatformWars.Weapons
 				new Sandbox.ScreenShake.Perlin();
 			}
 
-			ViewModelEntity?.SetAnimParam( "fire", true );
+			ViewModelEntity?.SetAnimBool( "fire", true );
 			CrosshairPanel?.OnEvent( "fire" );
 		}
 

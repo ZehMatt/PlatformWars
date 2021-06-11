@@ -38,6 +38,20 @@ namespace PlatformWars
 			}
 		}
 
+		void SetupLoadout()
+		{
+			var players = GetActivePlayers();
+			foreach ( var ply in players )
+			{
+				var pawns = ply.GetPawns();
+				foreach ( var pawn in pawns )
+				{
+					var inventory = pawn.Inventory as Inventory;
+					inventory.Add( new Weapons.Pistol(), true );
+				}
+			}
+		}
+
 		struct SpawnPos
 		{
 			public Vector3 pos;
@@ -53,8 +67,7 @@ namespace PlatformWars
 		{
 			Host.AssertServer();
 
-			var game = Game.Current as PlatformWars.Game;
-			var players = game.GetPlayers();
+			var players = GetActivePlayers();
 
 			List<Pawn> pawns = new List<Pawn>();
 			foreach ( var p in players )
@@ -113,21 +126,14 @@ namespace PlatformWars
 			}
 		}
 
-		void SetupPlayers()
-		{
-			for ( int i = 0; i < ActivePlayers.Count; i++ )
-			{
-			}
-		}
-
 		void HandleSetup()
 		{
 			if ( IsServer )
 			{
 				SetupTeams();
-				SetupPlayers();
 				SetupPawns();
 				ReorganizePawns();
+				SetupLoadout();
 			}
 
 			SetState( RoundState.Starting );

@@ -17,21 +17,6 @@ namespace PlatformWars
 		public Pawn()
 		{
 			Transmit = TransmitType.Always;
-			Inventory = new Inventory( this );
-		}
-
-		public override void BuildInput( InputBuilder input )
-		{
-			var roundMgr = RoundManager.Get();
-			if ( roundMgr != null && !roundMgr.CanPawnMove( this ) )
-			{
-				input.Clear();
-				input.ClearButtons();
-			}
-			else
-			{
-				base.BuildInput( input );
-			}
 		}
 
 		public override void Spawn()
@@ -56,14 +41,16 @@ namespace PlatformWars
 
 			SetModel( "models/citizen/citizen.vmdl" );
 
-			Controller = new WalkController();
+			Controller = new PawnController();
 			Animator = new StandardPlayerAnimator();
+			Inventory = new Inventory( this );
 
 			EnableAllCollisions = true;
 			EnableDrawing = true;
 			EnableHideInFirstPerson = true;
 			EnableShadowInFirstPerson = true;
 			Position = pos;
+			Tags.Add( "player" );
 
 			LifeState = LifeState.Alive;
 			Velocity = Vector3.Zero;

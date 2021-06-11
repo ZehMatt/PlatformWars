@@ -161,6 +161,7 @@ namespace PlatformWars
 			Client.Pawn = pawn;
 
 			SetCameraMode( Cameras.Mode.FPS );
+
 		}
 
 		public void SetTeam( Team team )
@@ -221,7 +222,7 @@ namespace PlatformWars
 				{
 					// Ugly work around to keep simulating forces with no input.
 					var tempCl = new TemporaryClient() { Pawn = pawn };
-					pawn.Simulate( tempCl );
+					pawn.Simulate( null );
 				}
 			}
 		}

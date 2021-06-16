@@ -43,7 +43,6 @@ namespace PlatformWars
 
 			Controller = new PawnController();
 			Animator = new StandardPlayerAnimator();
-			Inventory = new Inventory( this );
 
 			EnableAllCollisions = true;
 			EnableDrawing = true;
@@ -75,6 +74,33 @@ namespace PlatformWars
 				return -1.0f;
 
 			return DeathTime;
+		}
+
+		/// <summary>
+		/// Called every tick to simulate the player. This is called on the
+		/// client as well as the server (for prediction). So be careful!
+		/// </summary>
+		public override void Simulate( Client cl )
+		{
+			if ( LifeState == LifeState.Dead )
+			{
+				return;
+			}
+
+			//UpdatePhysicsHull();
+
+			var controller = GetActiveController();
+			controller?.Simulate( cl, this, GetActiveAnimator() );
+
+			SimulateActiveChild( cl, ActiveChild );
+		}
+
+		public override void FrameSimulate( Client cl )
+		{
+			base.FrameSimulate( cl );
+
+			var controller = GetActiveController();
+			controller?.FrameSimulate( cl, this, GetActiveAnimator() );
 		}
 
 		public override void OnKilled()

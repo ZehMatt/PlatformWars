@@ -38,20 +38,6 @@ namespace PlatformWars
 			}
 		}
 
-		void SetupLoadout()
-		{
-			var players = GetActivePlayers();
-			foreach ( var ply in players )
-			{
-				var pawns = ply.GetPawns();
-				foreach ( var pawn in pawns )
-				{
-					var inventory = pawn.Inventory as Inventory;
-					inventory.Add( new Weapons.Pistol(), true );
-				}
-			}
-		}
-
 		struct SpawnPos
 		{
 			public Vector3 pos;
@@ -123,6 +109,16 @@ namespace PlatformWars
 				pawn.Reset( spawnPos );
 
 				spawns.RemoveAt( spawnPick );
+			}
+		}
+
+		void SetupLoadout()
+		{
+			var players = GetActivePlayers();
+			foreach ( var ply in players )
+			{
+				var pistol = new Weapons.Pistol();
+				ply.AddItem( pistol );
 			}
 		}
 

@@ -100,7 +100,7 @@ namespace PlatformWars.UI.Huds
 			//
 			// Where we putting the label, in world coords
 			//
-			var head = pawn.GetAttachment( "hat" );
+			var head = pawn.GetAttachment( "hat" ) ?? new Transform( pawn.EyePos );
 			if ( head.Position == Vector3.Zero )
 			{
 				// FIXME: Make this work on non-players.

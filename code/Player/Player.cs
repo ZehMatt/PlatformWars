@@ -55,7 +55,6 @@ namespace PlatformWars
 		public Player( Client cl )
 		{
 			Transmit = TransmitType.Always;
-			Inventory = new Inventory( this );
 
 			Host.AssertServer();
 
@@ -152,6 +151,18 @@ namespace PlatformWars
 
 		public void RemoveControlled()
 		{
+			var pawn = Client.Pawn;
+			if ( pawn != null && pawn.IsValid() )
+			{
+				var wep = pawn.ActiveChild;
+				if ( wep != null && wep.IsValid() )
+				{
+					wep.Parent = null;
+					//wep.OnCarryDrop()
+				}
+				pawn.ActiveChild = null;
+			}
+
 			Client.Pawn = null;
 			SetCameraMode( Cameras.Mode.Spectate );
 		}
@@ -159,9 +170,25 @@ namespace PlatformWars
 		public void ControllPawn( Pawn pawn )
 		{
 			Client.Pawn = pawn;
-
 			SetCameraMode( Cameras.Mode.FPS );
 
+			// TODO: Properly do this to make sure the viewmodel is setup.
+			//pawn.ActiveChild = null;
+
+			if ( Host.IsServer )
+			{
+				pawn.ActiveChild = null;
+
+				var items = GetItems();
+				if ( items.Count != 0 )
+				{
+					var active = items[0];
+					active.Parent = pawn;
+					active.OnCarryStart( pawn );
+
+					pawn.ActiveChild = active;
+				}
+			}
 		}
 
 		public void SetTeam( Team team )

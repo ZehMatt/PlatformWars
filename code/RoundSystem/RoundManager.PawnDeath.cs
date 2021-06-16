@@ -42,7 +42,9 @@ namespace PlatformWars
 
 			SavedDeathStates.Add( saved );
 
-			Global.PhysicsTimeScale = 0.1f;
+			var scale = MathX.Clamp( StateTime / 3.0f, 0.0f, 1.0f );
+
+			Global.PhysicsTimeScale = 0.01f;
 		}
 
 		void HandlePawnDeath()
@@ -53,6 +55,9 @@ namespace PlatformWars
 			// The minimum time?
 			if ( StateTime < 1.0f )
 				return;
+
+			var scale = MathX.Clamp( (StateTime - 1.0f) / 4.0f, 0.0f, 1.0f );
+			Global.PhysicsTimeScale = scale;
 
 			if ( DyingPawns.Count == 0 )
 			{

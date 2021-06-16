@@ -1,4 +1,12 @@
 // 
+// platformwars.Entities.LootContainer : Sandbox.Entity 
+// 
+@PointClass = ent_loot : ""
+[
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+]
+
+// 
 // PlatformWars.Game : Sandbox.Game 
 // 
 @PointClass = platformwars : ""
@@ -15,8 +23,8 @@ metadata
 }
 = ent_stateent : ""
 [
-	model(studio) [report]: "World Model"
-	skin(materialgroup) [ group="Render Properties" ] : "Skin" : "default" : "Some models have multiple versions of their textures, called skins."
+	model(studio) [report]: "World Model" : ""
+	skin(materialgroup) [ group="Render Properties" ] : "Skin" : "default" : "Some models have multiple versions of their textures, called skins." 
 	bodygroups(bodygroupchoices) [ group="Render Properties" ] : "Body Groups" : "" 
 	disableshadows(boolean) [ group="Misc" ] : "Disable Shadows" : 0 : "Used to disable dynamic shadows on this entity." 
 	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
@@ -49,8 +57,8 @@ metadata
 }
 = ent_platform : ""
 [
-	model(studio) [report]: "World Model"
-	skin(materialgroup) [ group="Render Properties" ] : "Skin" : "default" : "Some models have multiple versions of their textures, called skins."
+	model(studio) [report]: "World Model" : ""
+	skin(materialgroup) [ group="Render Properties" ] : "Skin" : "default" : "Some models have multiple versions of their textures, called skins." 
 	bodygroups(bodygroupchoices) [ group="Render Properties" ] : "Body Groups" : "" 
 	disableshadows(boolean) [ group="Misc" ] : "Disable Shadows" : 0 : "Used to disable dynamic shadows on this entity." 
 	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."

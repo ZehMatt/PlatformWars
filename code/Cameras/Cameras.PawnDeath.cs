@@ -12,6 +12,7 @@ namespace PlatformWars.Cameras
 		public Rotation TargetRot;
 
 		float LookDistance = 400;
+		float CameraSpeed = 10.0f;
 
 		public PawnDeathCam() : base( Mode.PawnDeath )
 		{
@@ -63,8 +64,9 @@ namespace PlatformWars.Cameras
 			TargetPos = tr.EndPos;
 			TargetRot = Rotation.From( delta.EulerAngles );
 
-			Pos = Vector3.Lerp( Pos, TargetPos, Time.Delta * 10.0f );
-			Rot = Rotation.Lerp( Rot, TargetRot, Time.Delta * 10.0f );
+			var speed = Time.Delta * CameraSpeed;
+			Pos = Vector3.Lerp( Pos, TargetPos, speed );
+			Rot = Rotation.Lerp( Rot, TargetRot, speed );
 		}
 
 		public virtual Vector3 GetSpectatePoint()

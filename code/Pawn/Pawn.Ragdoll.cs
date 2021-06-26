@@ -17,13 +17,14 @@ namespace PlatformWars
 			ent.SetInteractsAs( CollisionLayer.Debris );
 			ent.SetInteractsWith( CollisionLayer.WORLD_GEOMETRY );
 			ent.SetInteractsWith( CollisionLayer.Debris );
+			ent.SetInteractsWith( CollisionLayer.Trigger );
 			ent.EnableSelfCollisions = false;
 
 			ent.SetModel( GetModelName() );
 			ent.CopyBonesFrom( this );
 			ent.TakeDecalsFrom( this );
 			ent.SetRagdollVelocityFrom( this );
-
+			ent.PhysicsGroup.Mass = 80.0f;
 
 			// Copy the clothes over
 			foreach ( var child in Children )

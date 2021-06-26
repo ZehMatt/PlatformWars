@@ -41,7 +41,7 @@ namespace PlatformWars
 		public Client Client { get => _client as Client; }
 
 		[Net]
-		public List<Pawn> Pawns { get; set; } = new();
+		public List<Pawn> Pawns { get; set; }
 
 		[Net]
 		Team CurrentTeam { get; set; }

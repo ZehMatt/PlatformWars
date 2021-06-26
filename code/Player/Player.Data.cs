@@ -6,6 +6,6 @@ namespace PlatformWars
 	partial class Player
 	{
 		[Net]
-		public List<int> Ammo { get; set; } = new();
+		public List<int> Ammo { get; set; }
 	}
 }

@@ -46,6 +46,9 @@ namespace PlatformWars
 		[ServerVar]
 		public static bool platformwars_debug { get; set; } = true;
 
+		[ServerVar]
+		public static bool platformwars_freeze_round { get; set; } = false;
+
 		[Net, Predicted]
 		bool StatePaused { get; set; }
 
@@ -62,12 +65,13 @@ namespace PlatformWars
 		Pawn ActivePawn { get; set; }
 
 		[Net]
-		int WorldSeed { get; set; } = 1;
+		int WorldSeed { get; set; } = 1337;
 
 		Stack<SavedState> SavedStates = new();
 
 		[Net]
-		List<Player> ActivePlayers { get; set; } = new();
+		List<Player> ActivePlayers { get; set; }
+
 
 		Dictionary<RoundState, StateActivationDelegate> ActivationHandler = new();
 		Dictionary<RoundState, StateUpdateDelegate> UpdateHandler = new();
@@ -122,15 +126,16 @@ namespace PlatformWars
 		[Event( "tick" )]
 		void Tick()
 		{
-			//DebugOverlay.ScreenText(0, $"Round State: {State.ToString()}");
-			//DebugOverlay.ScreenText(1, $"State Time: {StateTime.ToString()}");
+			DebugOverlay.ScreenText( 0, $"Round State: {State.ToString()}" );
+			DebugOverlay.ScreenText( 1, $"State Time: {StateTime.ToString()}" );
+
 			StateUpdateDelegate del;
 			if ( UpdateHandler.TryGetValue( State, out del ) )
 			{
 				del();
 			}
 
-			if ( !StatePaused && IsAuthority )
+			if ( !StatePaused && IsAuthority && platformwars_freeze_round != true )
 				StateTime += Time.Delta;
 		}
 
@@ -277,6 +282,11 @@ namespace PlatformWars
 					return platformwars_postturn_time;
 			}
 			return -1.0f;
+		}
+
+		public void AdvanceState()
+		{
+			StateTime = 999999.0f;
 		}
 	}
 }

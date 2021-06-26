@@ -6,158 +6,165 @@ using System.Collections.Generic;
 
 namespace PlatformWars.UI.Huds
 {
-	class BaseNameTag : Panel
-	{
-		public Label NameLabel;
-		public Image Avatar;
+    class BaseNameTag : Panel
+    {
+        public Label NameLabel;
+        public Image Avatar;
+        public Label HealthText;
+        public Panel HealthBar;
+        private float CurrentHealth;
 
-		Pawn pawn;
+        Pawn pawn;
 
-		public BaseNameTag( Pawn pawn )
-		{
-			this.pawn = pawn;
+        public BaseNameTag( Pawn pawn )
+        {
+            this.pawn = pawn;
+            var player = pawn.GetPlayer();
 
-			var player = pawn.GetPlayer();
+            NameLabel = Add.Label( player.Name );
+            Avatar = Add.Image( $"avatar:{player.SteamId}" );
+            HealthText = Add.Label( $"{pawn.Health}" );
+            HealthBar = Add.Panel();
+        }
 
+        public virtual void UpdateData( Pawn pawn )
+        {
+            if ( this.pawn.Health == CurrentHealth )
+                return;
 
-			NameLabel = Add.Label( player.Name );
-			Avatar = Add.Image( $"avatar:{player.SteamId}" );
-		}
+            CurrentHealth = this.pawn.Health;
+            HealthText.Text = $"{CurrentHealth}";
 
-		public virtual void UpdateFromPlayer( Player player )
-		{
-			// Nothing to do unless we're showing health and shit
-		}
-	}
+            var p = CurrentHealth / Pawn.MaxHealth;
+            var r = (1.0f - p);
+            var g = p;
+            var b = 0;
 
-	class PawnTags : Panel
-	{
-		Dictionary<Pawn, BaseNameTag> ActiveTags = new();
+            var style = HealthBar.Style;
+            style.BackgroundColor = new Color( r, g, b );
+        }
+    }
 
-		public float MaxDrawDistance = 4000;
-		public int MaxTagsToShow = 100;
+    class PawnTags : Panel
+    {
+        Dictionary<Pawn, BaseNameTag> ActiveTags = new();
 
-		public PawnTags()
-		{
-			StyleSheet.Load( "/ui/huds/PawnTags.scss" );
-		}
+        public float MaxDrawDistance = 4000;
+        public int MaxTagsToShow = 100;
 
-		public override void Tick()
-		{
-			base.Tick();
+        public PawnTags()
+        {
+            StyleSheet.Load( "/ui/huds/PawnTags.scss" );
+        }
 
-			var roundMgr = RoundManager.Get();
-			if ( roundMgr == null )
-				return;
+        public override void Tick()
+        {
+            base.Tick();
 
-			var deleteList = new List<Pawn>();
-			deleteList.AddRange( ActiveTags.Keys );
+            var roundMgr = RoundManager.Get();
+            if ( roundMgr == null )
+                return;
 
-			var activePlayers = roundMgr.GetActivePlayers();
+            var deleteList = new List<Pawn>();
+            deleteList.AddRange( ActiveTags.Keys );
 
-			int count = 0;
-			foreach ( var player in activePlayers )
-			{
-				var pawns = player.GetPawns();
-				foreach ( var pawn in pawns )
-				{
-					if ( UpdateNameTag( pawn ) )
-					{
-						deleteList.Remove( pawn );
-						count++;
-					}
+            var activePlayers = roundMgr.GetActivePlayers();
 
-					if ( count >= MaxTagsToShow )
-						break;
-				}
-			}
+            int count = 0;
+            foreach ( var player in activePlayers )
+            {
+                var pawns = player.GetPawns();
+                foreach ( var pawn in pawns )
+                {
+                    if ( UpdateNameTag( pawn ) )
+                    {
+                        deleteList.Remove( pawn );
+                        count++;
+                    }
 
-			foreach ( var player in deleteList )
-			{
-				ActiveTags[player].Delete();
-				ActiveTags.Remove( player );
-			}
-		}
+                    if ( count >= MaxTagsToShow )
+                        break;
+                }
+            }
 
-		public virtual BaseNameTag CreateNameTag( Pawn pawn )
-		{
-			var tag = new BaseNameTag( pawn );
-			tag.Parent = this;
-			return tag;
-		}
+            foreach ( var player in deleteList )
+            {
+                ActiveTags[player].Delete();
+                ActiveTags.Remove( player );
+            }
+        }
 
-		public bool UpdateNameTag( Pawn pawn )
-		{
-			// Don't draw local player
-			var player = pawn.GetPlayer();
+        public virtual BaseNameTag CreateNameTag( Pawn pawn )
+        {
+            var tag = new BaseNameTag( pawn );
+            tag.Parent = this;
+            return tag;
+        }
 
-			if ( pawn.LifeState != LifeState.Alive )
-				return false;
+        public bool UpdateNameTag( Pawn pawn )
+        {
+            // Don't draw local player
+            var player = pawn.GetPlayer();
 
-			if ( Local.Pawn == pawn )
-				return false;
+            if ( pawn.LifeState != LifeState.Alive )
+                return false;
 
-			//
-			// Where we putting the label, in world coords
-			//
-			var head = pawn.GetAttachment( "hat" ) ?? new Transform( pawn.EyePos );
-			if ( head.Position == Vector3.Zero )
-			{
-				// FIXME: Make this work on non-players.
-				head.Position = player.EyePos;
-			}
+            if ( Local.Pawn == pawn )
+                return false;
 
-			var labelPos = head.Position + head.Rotation.Up * 5;
+            //
+            // Where we putting the label, in world coords
+            //
+            var head = pawn.GetAttachment( "hat" ) ?? new Transform( pawn.EyePos );
+            var labelPos = head.Position + head.Rotation.Up * 5;
+            float dist = labelPos.Distance( CurrentView.Position );
 
-			//
-			// Are we too far away?
-			//
-			float dist = labelPos.Distance( CurrentView.Position );
-			if ( dist > MaxDrawDistance )
-				return false;
+            //
+            // Are we looking in this direction?
+            //
+            var lookDir = (labelPos - CurrentView.Position).Normal;
+            var dotProduct = CurrentView.Rotation.Forward.Dot( lookDir );
+            var dotThreshold = 0.90f;
+            if ( dotProduct < dotThreshold )
+                return false;
 
-			//
-			// Are we looking in this direction?
-			//
-			var lookDir = (labelPos - CurrentView.Position).Normal;
-			var dotProduct = CurrentView.Rotation.Forward.Dot( lookDir );
-			if ( dotProduct < 0.5 )
-				return false;
+            var tr = Trace.Ray( CurrentView.Position, labelPos ).WorldAndEntities().Ignore( Local.Pawn ).Run();
+            if ( tr.Hit )
+            {
+                if ( tr.Entity != pawn )
+                    return false;
+            }
 
-			// TODO - can we see them
+            // Max Draw Distance
+            var alpha = ((dotProduct - dotThreshold) / (1.0f - dotThreshold)) * 0.75f;
+            var maxScaleDistance = 2000.0f;
+            var objectSize = (dist / maxScaleDistance); // distanceScale / dist / (2.0f * MathF.Tan( (CurrentView.FieldOfView / 2.0f).DegreeToRadian() )) * MaxDrawDistance;
 
-			// Max Draw Distance
-			var alpha = dist.LerpInverse( MaxDrawDistance, MaxDrawDistance * 0.1f, true ) * (dotProduct - 0.5f);
+            objectSize = objectSize.Clamp( 0.5f, 0.7f );
 
-			// If I understood this I'd make it proper function
-			var distanceScale = 0.08f;
-			var objectSize = distanceScale / dist / (2.0f * MathF.Tan( (CurrentView.FieldOfView / 2.0f).DegreeToRadian() )) * MaxDrawDistance;
+            if ( !ActiveTags.TryGetValue( pawn, out var tag ) )
+            {
+                tag = CreateNameTag( pawn );
+                ActiveTags[pawn] = tag;
+            }
 
-			objectSize = objectSize.Clamp( 0.05f, 10.0f );
+            tag.UpdateData( pawn );
 
-			if ( !ActiveTags.TryGetValue( pawn, out var tag ) )
-			{
-				tag = CreateNameTag( pawn );
-				ActiveTags[pawn] = tag;
-			}
+            var screenPos = labelPos.ToScreen();
 
-			tag.UpdateFromPlayer( player );
+            tag.Style.Left = Length.Fraction( screenPos.x );
+            tag.Style.Top = Length.Fraction( screenPos.y );
+            tag.Style.Opacity = alpha;
 
-			var screenPos = labelPos.ToScreen();
+            var transform = new PanelTransform();
+            transform.AddScale( objectSize );
+            transform.AddTranslateY( Length.Fraction( -1.0f ) );
+            transform.AddTranslateX( Length.Fraction( -0.5f ) );
 
-			tag.Style.Left = Length.Fraction( screenPos.x );
-			tag.Style.Top = Length.Fraction( screenPos.y );
-			tag.Style.Opacity = alpha;
+            tag.Style.Transform = transform;
+            tag.Style.Dirty();
 
-			var transform = new PanelTransform();
-			transform.AddScale( objectSize );
-			transform.AddTranslateY( Length.Fraction( -1.0f ) );
-			transform.AddTranslateX( Length.Fraction( -0.5f ) );
-
-			tag.Style.Transform = transform;
-			tag.Style.Dirty();
-
-			return true;
-		}
-	}
+            return true;
+        }
+    }
 }

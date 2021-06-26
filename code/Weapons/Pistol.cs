@@ -50,7 +50,7 @@ namespace PlatformWars.Weapons
 			//
 			// Shoot the bullets
 			//
-			ShootBullet( 0.05f, 50.5f, Damage, 3.0f );
+			ShootBullet( 0.05f, 10.5f, Damage, 3.0f );
 		}
 	}
 

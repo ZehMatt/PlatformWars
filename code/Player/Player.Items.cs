@@ -13,7 +13,7 @@ namespace PlatformWars
 	partial class Player
 	{
 		[Net]
-		public List<Entity> Items { get; set; } = new();
+		public List<Entity> Items { get; set; }
 
 		public void AddItem( Entity ent )
 		{

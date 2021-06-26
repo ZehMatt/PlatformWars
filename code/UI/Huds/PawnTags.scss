@@ -31,5 +31,20 @@
             margin-right: 0px;
             border-radius: 100px;
         }
+
+        label {
+            padding: 1px 60px;
+            padding-left: 40px;
+            text-align: center;
+        }
+
+        panel {
+            align-self: flex-start;
+            background-color: green;
+            width: 20px;
+            height: 100%;
+            padding-left: 4px;
+            padding-top: 4px;
+        }
     }
 }

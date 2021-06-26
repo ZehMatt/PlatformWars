@@ -150,6 +150,7 @@ namespace PlatformWars.Cameras
 			{
 				if ( totalPawns > 0 )
 					posFocusAt /= totalPawns;
+
 			}
 
 			var minMaxDistance = System.Math.Clamp( Vector3.DistanceBetween( posMin, posMax ), 400.0f, 1000.0f );
@@ -205,7 +206,7 @@ namespace PlatformWars.Cameras
 
 		Vector3 GetViewOffset( float distance )
 		{
-			return LookAngles.Direction * -distance + Vector3.Up * 20;
+			return LookAngles.Direction * -distance + (Vector3.Up * 10);
 		}
 
 		void FreeMove()

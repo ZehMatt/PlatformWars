@@ -14,7 +14,7 @@ namespace PlatformWars
 		List<SavedGlobalState> SavedDeathStates = new();
 
 		[Net]
-		List<Pawn> DyingPawns { get; set; } = new();
+		List<Pawn> DyingPawns { get; set; }
 
 		// TODO: Make this a convar.
 		const float MaxPawnDeathTime = 10.0f;
@@ -44,7 +44,7 @@ namespace PlatformWars
 
 			var scale = MathX.Clamp( StateTime / 3.0f, 0.0f, 1.0f );
 
-			Global.PhysicsTimeScale = 0.01f;
+			Global.PhysicsTimeScale = 0.001f;
 		}
 
 		void HandlePawnDeath()
@@ -56,8 +56,8 @@ namespace PlatformWars
 			if ( StateTime < 1.0f )
 				return;
 
-			var scale = MathX.Clamp( (StateTime - 1.0f) / 4.0f, 0.0f, 1.0f );
-			Global.PhysicsTimeScale = scale;
+			var t = MathX.Clamp( (StateTime - 1.0f) / 4.0f, 0.0f, 1.0f );
+			Global.PhysicsTimeScale = t * 0.1f;
 
 			if ( DyingPawns.Count == 0 )
 			{

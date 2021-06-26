@@ -63,9 +63,14 @@ namespace PlatformWars
 
 		public override void TakeDamage( DamageInfo info )
 		{
+			if ( LifeState != LifeState.Alive )
+				return;
+
 			base.TakeDamage( info );
 
 			LastDamage = info;
+
+			UI.Hud.Get().DisplayDamageValue( To.Everyone, this, info.Damage );
 		}
 
 		public float GetDeathTime()

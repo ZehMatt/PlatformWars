@@ -15,12 +15,14 @@ namespace PlatformWars
 
 		List<Player> Players = new();
 
+		[Net]
+		public UI.Hud PlayerHud { get; set; }
+
 		public override void Spawn()
 		{
 			base.Spawn();
 
-			new PlatformWars.UI.Hud();
-
+			PlayerHud = Create<UI.Hud>();
 			RoundManager = Create<RoundManager>();
 			TerrainManager = Create<Terrain.Manager>();
 		}

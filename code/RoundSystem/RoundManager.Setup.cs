@@ -81,7 +81,7 @@ namespace PlatformWars
 						continue;
 
 					var dist = Vector3.DistanceBetween( spawn.pos, spawns[j].pos );
-					if ( dist < 16 )
+					if ( dist < dividedDim )
 					{
 						// We have to make sure we got enough spawns.
 						if ( spawns.Count - 1 <= pawns.Count )

@@ -20,24 +20,17 @@
   <PropertyGroup>
 	<OutputPath>../.intermediate/</OutputPath>
 	<DocumentationFile>../.intermediate/netstandard2.0/platformwars.xml</DocumentationFile>
-	<RootNamespace>PlatformWars</RootNamespace>
   </PropertyGroup>
 
 	<ItemGroup>
-		<Analyzer Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Generator.dll" />
-		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.System.dll" />
-		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Engine.dll" />
-		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Game.dll" />
-		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Hotload.dll" />
+		<Analyzer Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Generator.dll"/>
+		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.System.dll"/>
+		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Engine.dll"/>
+		<Reference Include="D:/Steam/steamapps/common/sbox/bin/managed/Sandbox.Game.dll"/>
 	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="D:\Steam\steamapps\common\sbox\addons\base\code\base.csproj"></ProjectReference>
-
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Network\" />
+<ProjectReference Include="D:\Steam\steamapps\common\sbox\Addons\base\code\base.csproj" />
   </ItemGroup>
 
 </Project>

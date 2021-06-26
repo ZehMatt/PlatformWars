@@ -1,0 +1,33 @@
+﻿damageinfo {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    left: 0px;
+    bottom: 0px;
+
+    damagedisplay {
+        font-family: Poppins;
+        position: absolute;
+        font-weight: 500;
+        color: white;
+        background-color: rgba( #222, 0.25 );
+        font-size: 40px;
+        transform-origin: 50% 0%;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: row-reverse;
+
+        label {
+            margin: 5px 5px 5px 5px;
+        }
+
+        &.positive {
+            color: green;
+        }
+
+        &.negative {
+            color:darkred;
+        }
+    }
+}

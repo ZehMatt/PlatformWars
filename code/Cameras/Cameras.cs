@@ -5,6 +5,7 @@
 		Spectate,
 		PawnDeath,
 		FPS,
+		TPS,
 	}
 
 	public class Base : Sandbox.Camera

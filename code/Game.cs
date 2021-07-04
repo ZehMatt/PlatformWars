@@ -56,6 +56,17 @@ namespace PlatformWars
 			return Players.AsReadOnly();
 		}
 
+		public Player GetLocalPlayer()
+		{
+			var cl = Local.Client;
+			foreach ( var ply in Players )
+			{
+				if ( ply.Client == cl )
+					return ply;
+			}
+			return null;
+		}
+
 		public override void PostLevelLoaded()
 		{
 			base.PostLevelLoaded();

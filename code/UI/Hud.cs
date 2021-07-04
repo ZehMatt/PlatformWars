@@ -23,6 +23,7 @@ namespace PlatformWars.UI
 			RootPanel.AddChild<VoiceList>();
 			RootPanel.AddChild<KillFeed>();
 			RootPanel.AddChild<Scoreboard<ScoreboardEntry>>();
+			RootPanel.AddChild<PlayerItems>();
 		}
 
 		public static Hud Get()

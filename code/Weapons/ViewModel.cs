@@ -7,7 +7,7 @@ namespace PlatformWars
 		protected float SwingInfluence => 0.05f;
 		protected float ReturnSpeed => 5.0f;
 		protected float MaxOffsetLength => 10.0f;
-		protected float BobCycleTime => 7;
+		protected float BobCycleTime => 10;
 		protected Vector3 BobDirection => new Vector3( 0.0f, 1.0f, 0.5f );
 
 		private Vector3 swingOffset;

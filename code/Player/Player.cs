@@ -179,6 +179,7 @@ namespace PlatformWars
 			{
 				pawn.ActiveChild = null;
 
+				/*
 				var items = GetItems();
 				if ( items.Count != 0 )
 				{
@@ -188,6 +189,7 @@ namespace PlatformWars
 
 					pawn.ActiveChild = active;
 				}
+				*/
 			}
 		}
 

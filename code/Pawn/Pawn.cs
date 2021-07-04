@@ -42,7 +42,7 @@ namespace PlatformWars
 			SetModel( "models/citizen/citizen.vmdl" );
 
 			Controller = new PawnController();
-			Animator = new StandardPlayerAnimator();
+			Animator = new PawnAnimator();
 
 			EnableAllCollisions = true;
 			EnableDrawing = true;
@@ -81,6 +81,16 @@ namespace PlatformWars
 			return DeathTime;
 		}
 
+		public void SwitchToWeapon( Entity weapon )
+		{
+			Log.Info( "Requested weapon change" );
+
+			weapon.Parent = this;
+			ActiveChild = weapon;
+
+			weapon.OnCarryStart( this );
+		}
+
 		/// <summary>
 		/// Called every tick to simulate the player. This is called on the
 		/// client as well as the server (for prediction). So be careful!
@@ -90,6 +100,21 @@ namespace PlatformWars
 			if ( LifeState == LifeState.Dead )
 			{
 				return;
+			}
+
+			if ( Input.ActiveChild != null )
+			{
+				SwitchToWeapon( Input.ActiveChild );
+			}
+
+			if ( Input.Pressed( InputButton.View ) )
+			{
+				Log.Info( "Change camera" );
+
+				if ( cl.Camera is Cameras.FPS )
+					cl.Camera = new Cameras.TPS();
+				else
+					cl.Camera = new Cameras.FPS();
 			}
 
 			//UpdatePhysicsHull();
@@ -139,6 +164,28 @@ namespace PlatformWars
 		{
 			return Ragdoll;
 		}
+
+		public override void OnAnimEventFootstep( Vector3 pos, int foot, float volume )
+		{
+			if ( LifeState != LifeState.Alive )
+				return;
+
+			if ( !IsClient )
+				return;
+
+			DebugOverlay.Box( 1, pos, -1, 1, Color.Red );
+			DebugOverlay.Text( pos, $"{volume}", Color.White, 5 );
+
+			var tr = Trace.Ray( pos, pos + Vector3.Down * 7 )
+				.Radius( 1 )
+				.Ignore( this )
+				.Run();
+
+			if ( !tr.Hit ) return;
+
+			tr.Surface.DoFootstep( this, tr, foot, volume );
+		}
+
 
 	}
 }

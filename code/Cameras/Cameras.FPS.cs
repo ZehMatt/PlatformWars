@@ -4,34 +4,42 @@ namespace PlatformWars.Cameras
 {
 	class FPS : Base
 	{
-		Vector3 lastPos;
+		Vector3 TargetPos;
 
 		public FPS() : base( Mode.FPS )
 		{ }
 
 		public override void Activated()
 		{
-			var player = Local.Pawn;
-			if ( player == null ) return;
+			var pawn = Local.Pawn;
+			if ( pawn == null ) return;
 
-			Pos = player.EyePos;
-			Rot = player.EyeRot;
+			Pos = pawn.EyePos;
+			Rot = pawn.EyeRot;
+		}
 
-			lastPos = Pos;
+		public override void Build( ref CameraSetup camSetup )
+		{
+			base.Build( ref camSetup );
+
+			camSetup.ZFar = 20000;
+			camSetup.ZNear = 10;
+
 		}
 
 		public override void Update()
 		{
-			var player = Local.Pawn;
-			if ( player == null ) return;
+			var pawn = Local.Pawn as AnimEntity;
+			if ( pawn == null ) return;
 
-			Pos = Vector3.Lerp( player.EyePos.WithZ( lastPos.z ), player.EyePos, 20.0f * Time.Delta );
-			Rot = player.EyeRot;
+			TargetPos = pawn.EyePos;
 
-			FieldOfView = 80;
+			Pos = pawn.EyePos;
+			Rot = pawn.EyeRot;
 
-			Viewer = player;
-			lastPos = Pos;
+			FieldOfView = 75;
+
+			Viewer = pawn;
 		}
 	}
 }

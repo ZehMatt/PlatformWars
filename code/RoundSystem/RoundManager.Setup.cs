@@ -117,8 +117,8 @@ namespace PlatformWars
 			var players = GetActivePlayers();
 			foreach ( var ply in players )
 			{
-				var pistol = new Weapons.Pistol();
-				ply.AddItem( pistol );
+				ply.AddItem( new Weapons.Pistol() );
+				ply.AddItem( new Weapons.SMG() );
 			}
 		}
 

@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PlatformWars.Terrain
+namespace PlatformWars.World
 {
 	public enum TerrainType
 	{
@@ -10,7 +10,7 @@ namespace PlatformWars.Terrain
 		Solid,
 	}
 
-	class Manager : Entity
+	partial class Manager : Entity
 	{
 		public static int Width = 64;
 		public static int Length = 64;
@@ -20,10 +20,53 @@ namespace PlatformWars.Terrain
 		List<Vector3> Spawns = new();
 		Dictionary<Vector3, Chunk> Chunks = new();
 
+		[Net, OnChangedCallback]
+		public Vector3 WindDirection { get; set; } = new Vector3( 1.0f, 0.0f, 0.0f );
+
+		[Net, OnChangedCallback]
+		public float WindForce { get; set; } = 100.0f;
+
+		private Particles WindEmitter { get; set; }
+
 		public static Manager Get()
 		{
 			var game = Game.Current as PlatformWars.Game;
 			return game.GetTerrainManager();
+		}
+
+		public Manager()
+		{
+			Transmit = TransmitType.Always;
+		}
+
+		public Vector3 GetWindForce()
+		{
+			return WindDirection * WindForce;
+		}
+
+		public override void ClientSpawn()
+		{
+			Log.Info( "Creating Wind effects" );
+
+			WindEmitter = Particles.Create( "particles/wind.vpcf" );
+			WindEmitter.SetPosition( 0, Vector3.Zero );
+
+			UpdateWind();
+		}
+
+		private void OnWindDirChanged()
+		{
+			UpdateWind();
+		}
+
+		private void OnWindForceChanged()
+		{
+			UpdateWind();
+		}
+
+		private void UpdateWind()
+		{
+			WindEmitter.SetPosition( 1, WindDirection * WindForce );
 		}
 
 		// World space into voxel space. Each unit is divided by the block size.

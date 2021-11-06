@@ -4,7 +4,7 @@ namespace PlatformWars
 {
 	partial class RoundManager
 	{
-		Terrain.Generator TerrainGen;
+		World.Generator TerrainGen;
 
 		// Public for command.
 		public void HandleTerrainGeneration()
@@ -12,7 +12,7 @@ namespace PlatformWars
 			if ( !IsAuthority )
 				return;
 
-			var terrain = Terrain.Manager.Get();
+			var terrain = World.Manager.Get();
 			if ( terrain == null )
 			{
 				Log.Error( "Terrain Manager does not exist" );
@@ -23,9 +23,9 @@ namespace PlatformWars
 			{
 				TerrainGen = new( terrain );
 
-				int w = Terrain.Manager.Width;
-				int l = Terrain.Manager.Length;
-				int h = Terrain.Manager.MaxHeight;
+				int w = World.Manager.Width;
+				int l = World.Manager.Length;
+				int h = World.Manager.MaxHeight;
 
 				Vector3 pos = new Vector3( -(w / 2), -(l / 2), 16 );
 				TerrainGen.Generate( pos, w, l, h, WorldSeed );

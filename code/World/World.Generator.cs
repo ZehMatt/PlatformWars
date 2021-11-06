@@ -1,6 +1,6 @@
 ﻿using Sandbox;
 
-namespace PlatformWars.Terrain
+namespace PlatformWars.World
 {
 	class Generator
 	{

@@ -9,7 +9,7 @@ namespace PlatformWars
 		public RoundManager RoundManager { get; set; }
 
 		[Net]
-		public Terrain.Manager TerrainManager { get; set; }
+		public World.Manager TerrainManager { get; set; }
 
 		[Net]
 		public int IntegerVal { get; set; }
@@ -22,7 +22,7 @@ namespace PlatformWars
 			base.Spawn();
 
 			RoundManager = Create<RoundManager>();
-			TerrainManager = Create<Terrain.Manager>();
+			TerrainManager = Create<World.Manager>();
 			IntegerVal = 0xDEAD;
 			FloatVal = 0.3515f;
 

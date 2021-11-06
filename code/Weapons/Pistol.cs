@@ -22,12 +22,22 @@ namespace PlatformWars.Weapons
 
 		public virtual void Reload()
 		{
-
 		}
 
 		public virtual void AttackPrimary()
 		{
 			ShootAnimation();
+			ShootEffectsPredicted();
+			ShootEffects();
+
+			PlaySound( "rust_pistol.shoot" );
+
+			if ( Host.IsServer )
+			{
+				var bullet = new Projectiles.Bullet();
+				bullet.LaunchTowards( Owner.EyePos, Owner.EyeRot );
+				bullet.Owner = Owner;
+			}
 		}
 
 		public virtual void AttackSecondary()

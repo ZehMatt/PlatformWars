@@ -11,7 +11,7 @@ namespace PlatformWars
 		public RoundManager RoundManager { get; set; }
 
 		[Net]
-		public Terrain.Manager TerrainManager { get; set; }
+		public World.Manager TerrainManager { get; set; }
 
 		List<Player> Players = new();
 
@@ -24,7 +24,7 @@ namespace PlatformWars
 
 			PlayerHud = Create<UI.Hud>();
 			RoundManager = Create<RoundManager>();
-			TerrainManager = Create<Terrain.Manager>();
+			TerrainManager = Create<World.Manager>();
 		}
 
 		public override void ClientSpawn()
@@ -37,7 +37,7 @@ namespace PlatformWars
 			return RoundManager;
 		}
 
-		public Terrain.Manager GetTerrainManager()
+		public World.Manager GetTerrainManager()
 		{
 			return TerrainManager;
 		}

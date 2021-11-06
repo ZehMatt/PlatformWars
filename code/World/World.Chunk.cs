@@ -1,7 +1,7 @@
 ﻿using Sandbox;
 using System.Collections.Generic;
 
-namespace PlatformWars.Terrain
+namespace PlatformWars.World
 {
 	public struct Voxel
 	{

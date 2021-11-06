@@ -12,8 +12,10 @@ namespace PlatformWars.Weapons.Projectiles
 	{
 		public override string ProjectileModel => "weapons/shells/pistol_shell.vmdl";
 
-		public override float Speed { get; } = 120.0f;
+		public override float LaunchSpeed { get; } = 4200.0f;
 
 		public override float Mass { get; } = 0.002f;
+
+		public override float ImpactDamage { get; set; } = 25.0f;
 	}
 }

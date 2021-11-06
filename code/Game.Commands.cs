@@ -22,7 +22,7 @@ namespace PlatformWars
 		[ServerCmd( "terrain_gen", Help = "Generate Terrain" )]
 		public static void TerrainGen()
 		{
-			var terrain = Terrain.Manager.Get();
+			var terrain = World.Manager.Get();
 			if ( terrain == null )
 			{
 				Log.Error( "Terrain Manager does not exist" );
@@ -31,10 +31,10 @@ namespace PlatformWars
 
 			terrain.Clear();
 
-			Vector3 pos = new Vector3( -(Terrain.Manager.Width / 2), -(Terrain.Manager.Length / 2), 16 );
+			Vector3 pos = new Vector3( -(World.Manager.Width / 2), -(World.Manager.Length / 2), 16 );
 
-			Terrain.Generator gen = new( terrain );
-			gen.Generate( pos, Terrain.Manager.Width, Terrain.Manager.Length, Terrain.Manager.MaxHeight );
+			World.Generator gen = new( terrain );
+			gen.Generate( pos, World.Manager.Width, World.Manager.Length, World.Manager.MaxHeight );
 		}
 
 

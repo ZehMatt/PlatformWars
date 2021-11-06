@@ -211,7 +211,7 @@ namespace PlatformWars
 			if ( platformwars_debug && State == RoundState.WaitForPlayer )
 				return true;
 
-			if ( State != RoundState.PlayerTurn )
+			if ( State != RoundState.PlayerTurn && State != RoundState.PostPlayerTurn )
 				return false;
 
 			if ( ActivePawn != pawn )

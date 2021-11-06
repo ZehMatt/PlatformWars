@@ -49,13 +49,25 @@ namespace PlatformWars.Weapons
 		protected void ShootAnimation()
 		{
 			(Owner as AnimEntity)?.SetAnimBool( "b_attack", true );
+
 			ViewModelEntity?.SetAnimBool( "fire", true );
 			CrosshairPanel?.CreateEvent( "fire" );
 		}
 
-		protected void ShootProjectileHitscan()
+		protected void ShootEffectsPredicted()
 		{
+			if ( IsLocalPawn )
+			{
+				_ = new Sandbox.ScreenShake.Perlin();
+			}
+		}
 
+		[ClientRpc]
+		protected void ShootEffects()
+		{
+			Host.AssertClient();
+
+			Particles.Create( "particles/pistol_muzzleflash.vpcf", EffectEntity, "muzzle" );
 		}
 	}
 

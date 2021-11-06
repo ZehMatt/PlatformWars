@@ -171,26 +171,7 @@ namespace PlatformWars
 		{
 			Client.Pawn = pawn;
 			SetCameraMode( Cameras.Mode.FPS );
-
-			// TODO: Properly do this to make sure the viewmodel is setup.
-			//pawn.ActiveChild = null;
-
-			if ( Host.IsServer )
-			{
-				pawn.ActiveChild = null;
-
-				/*
-				var items = GetItems();
-				if ( items.Count != 0 )
-				{
-					var active = items[0];
-					active.Parent = pawn;
-					active.OnCarryStart( pawn );
-
-					pawn.ActiveChild = active;
-				}
-				*/
-			}
+			pawn.ActiveChild = null;
 		}
 
 		public void SetTeam( Team team )

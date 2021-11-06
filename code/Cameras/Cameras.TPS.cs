@@ -6,9 +6,6 @@ namespace PlatformWars.Cameras
 	{
 		Vector3 lastPos;
 
-		private Angles orbitAngles;
-		private float orbitDistance = 150;
-
 		public TPS() : base( Mode.TPS )
 		{ }
 

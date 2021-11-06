@@ -62,8 +62,8 @@ namespace PlatformWars
 				pawns.AddRange( ply.GetPawns() );
 			}
 
-			var mgr = Terrain.Manager.Get();
-			var totalDim = Terrain.Manager.Width * Terrain.Manager.Length;
+			var mgr = World.Manager.Get();
+			var totalDim = World.Manager.Width * World.Manager.Length;
 			var dividedDim = MathF.Sqrt( totalDim / pawns.Count );
 
 			var spawns = new List<SpawnPos>();
@@ -104,7 +104,7 @@ namespace PlatformWars
 
 				var spawn = spawns[spawnPick];
 				var pos = spawn.pos;
-				var spawnPos = new Vector3( pos.x * Terrain.Voxel.SizeX, pos.y * Terrain.Voxel.SizeY, 200 + (pos.z * Terrain.Voxel.SizeZ) );
+				var spawnPos = new Vector3( pos.x * World.Voxel.SizeX, pos.y * World.Voxel.SizeY, 200 + (pos.z * World.Voxel.SizeZ) );
 
 				pawn.Reset( spawnPos );
 
